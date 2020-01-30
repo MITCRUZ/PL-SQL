@@ -1,11 +1,14 @@
                                                               Tables
                                                               
-                                                          Creating tables:
+                                                          Creating tables in PL/SQL:
                                                           
 Create table my_table (
 	First_name varchar2(55),
-	Last_name varchar2(55)
+	Last_name varchar2(55),
+	email varchar2(115) default 'company@xmail.com'
 	);
+(cannot have pls_integer or serial as type for an attribute/column)
+
 Create table my_table_2 as select * from hr.employees; 
 (The above query grabs all data and table structure from the employees table and inserts it into our new table.)
 Create table my_table_3 as select * from hr.employees where 1 = 2;
@@ -24,6 +27,10 @@ Delete from my_table
 (deletes everything from our table)
 Delete from my_table where employee_id = 104;
 (deletes only a specific row)
+
+						      Adding columns to a table:
+
+alter table my_table add department_id number not null;
 
                                                           Removing a table:
                                                           
