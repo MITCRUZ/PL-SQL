@@ -289,3 +289,7 @@ begin
     idx := emps.next(idx);
   end loop;
 end;
+--------------------------------------------------------------------------------------------------------------------------------------------
+The variables we create are stored in the PGA (Program Global Area) when the program runs.
+
+
