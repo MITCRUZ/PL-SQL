@@ -1,7 +1,7 @@
 Notes: The code below can be run in oracle live
 
 -----------------------------------------------------------Records-------------------------------------------------------------------------
-                                                        
+                                                      
                                                Two ways to declare variables:
     emps hr.employees%rowtype;
     type r_emps is record (
@@ -22,7 +22,7 @@ emps.first_name := ‘stan’;
 *Records don’t have any attributes like collections do.
 
 -----------------------------------------------------------VARRAY--------------------------------------------------------------------------
-
+Can be added to tables if created at schema level
                                                     Declaring and Initializing:
                                                     
 type r_emps is varray(5) of varchar2(55);
@@ -90,7 +90,7 @@ end;
 (returns true if an element exists in the current index)
 
 ------------------------------------------------------------NESTED TABLE----------------------------------------------------------------
-
+Can be added to tables if created at schema level
                                                 Declaring and Initializing a nested table:
                                                 
 declare 
@@ -158,7 +158,7 @@ begin
 end;                                                  
 
 ----------------------------------------------------------Associative Arrays------------------------------------------------------------
-
+Cannot be added to tables
                                               Declaring and Initialzing Associative Arrays
 
 declare 
