@@ -98,3 +98,4 @@ end;
 found: returns true if it finds an element.
 notfound: returns true if it finds nothing.
 isopen: returns true if the cursor is open.
+rowcount: returns the number of times the cursor was fetched.
