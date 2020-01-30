@@ -162,12 +162,7 @@ end;
 declare 
     type t_emps is table of varchar2(55) index by pls_integer;
     emps t_emps;
-    
-    type t_emps_2 is table of varchar2(55) index by pls_integer;
-    emps_2 t_emps_2 := t_emps_2('stan', 'tom', 'joe');
-    
-    type t_emps_3 is table of varchar2(55) index by pls_integer;
-    emps_3 t_emps_3 := t_emps_3();
+
     
                                                  Adding/Removing values after declaring:  
                                                  
