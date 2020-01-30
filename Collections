@@ -1,7 +1,7 @@
 Notes: The code below can be run in oracle live
 
 -----------------------------------------------------------Records-------------------------------------------------------------------------
-                                                      
+We cannot declare records at schema level                                                      
                                                Two ways to declare variables:
     emps hr.employees%rowtype;
     type r_emps is record (
