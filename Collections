@@ -1,1 +1,19 @@
+Records
+Two ways to declare variables:
+    emps hr.employees%rowtype;
+    type r_emps is record (
+        first_name varchar2(55),
+        last_name varchar2(55)
+        );
+    emps_2 r_emps;
+
+To insert values into the record:
+select * into emps from hr.employees where employee_id = 101;
+select first_name, last_name into emps_2 from hr.employees where employee_id = 102;
+
+To update the values in the record:
+emps.first_name := ‘stan’;
+
+*if you have a record inside a record, it will need its own select clause if you want to insert values into it.
+*Records don’t have any attributes like collections do.
 
