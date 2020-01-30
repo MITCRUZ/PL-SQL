@@ -1,3 +1,5 @@
+Notes: The code below can be run in oracle live
+
 -----------------------------------------------------------Records-------------------------------------------------------------------------
                                                         
                                                Two ways to declare variables:
@@ -179,11 +181,86 @@ begin
 end;                                                 
 
 
+                                    Iterating through a non-sequential Associative Array with while loops 
+                                    
+declare 
+    type t_emps is table of varchar2(55) index by pls_integer;
+    emps t_emps;
+    idx pls_integer;
+begin
+    emps(100) := 'billy';
+    emps(225) := 'joe';
+    
+    idx := emps.first;
+    while idx is not null loop
+      dbms_output.put_line(emps(idx));
+      idx := emps.next(idx);
+    end loop;
+end;
 
 
+                                      Iterating through an Associative Array with strings for keys 
+                                      
+declare
+    type t_emps is table of varchar2(55) index by varchar2(225);
+    emps t_emps;
+    idx varchar2(225);
+    v_first_name varchar2(55);
+    v_email hr.employees.email%type;
+begin
+  --Populate
+  for i in 100..110 loop
+    select first_name, email into v_first_name, v_email from hr.employees where employee_id = i;
+    emps(v_email) := v_first_name;
+  end loop;
+  
+  --Print
+  idx := emps.first;
+  while idx is not null loop
+    dbms_output.put_line(emps(idx) || '\s email is ' || idx);
+    idx := emps.next(idx);
+  end loop;
+end;
 
+                                                             Printing in reverse:
+                                                             
+declare
+    type t_emps is table of varchar2(55) index by varchar2(225);
+    emps t_emps;
+    idx varchar2(225);
+    v_first_name varchar2(55);
+    v_email hr.employees.email%type;
+begin
+  --Populate
+  for i in 100..110 loop
+    select first_name, email into v_first_name, v_email from hr.employees where employee_id = i;
+    emps(v_email) := v_first_name;
+  end loop;
+  
+  --print
+  idx := emps.last;
+  while idx is not null loop
+    dbms_output.put_line(emps(idx) || '\s email is ' || idx);
+    idx := emps.prior(idx);
+  end loop;
+end;                                                             
 
-
-
-
-
+                                                Using Associative Arrays with Records
+                                                
+declare
+    type t_emps is table of hr.employees%rowtype index by varchar2(225);
+    emps t_emps;
+    idx varchar2(225);
+begin
+  --Populate
+  for i in 100..110 loop
+    select * into emps(i) from hr.employees where employee_id = i;
+  end loop;
+  
+  --print
+  idx := emps.first;
+  while idx is not null loop
+    dbms_output.put_line('The email of ' || emps(idx).first_name || ' is ' || emps(idx).email);
+    idx := emps.next(idx);
+  end loop;
+end;
