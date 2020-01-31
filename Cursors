@@ -83,14 +83,21 @@ end;
                                                       
 declare
   cursor c_emps (p_dept_id number) is select first_name,last_name,department_name 
-                    from employees join departments using (department_id)
+                    from hr.employees join hr.departments using (department_id)
                     where department_id = p_dept_id;
   v_emps c_emps%rowtype;
 begin
-  open c_emps(:b_emp);
+  open c_emps(:b_var);
   fetch c_emps into v_emps;
     dbms_output.put_line('The employees in department of '|| v_emps.department_name|| ' are :');
     close c_emps;
+  open c_emps(:b_var);
+    loop
+      fetch c_emps into v_emps;
+      exit when c_emps%notfound;
+      dbms_output.put_line(v_emps.first_name|| ' ' ||v_emps.last_name);
+    end loop;
+  close c_emps;
 end;
 
                                                             Attributes
