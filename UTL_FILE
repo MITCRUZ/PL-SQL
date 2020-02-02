@@ -1,0 +1,19 @@
+--create directory on oracle database and reference that to your os path
+--grants read and write privileges to dir
+SQL> create dir 'UTL_DIR' as 'blah/blah/blah';
+SQL> grant read, write on dir 'UTL_DIR' to public;
+
+
+declare
+    f_handle utl_file.filetype;
+begin
+    f_handle := utl_file.fopen('UTL_DIR', 'TEST_FILE', 'w');
+    
+    utl_file.put_line(f_handle, 'first line');
+    utl_file.put(f_handle, 'last line.');
+    
+    utl_file.fclose(f_handle);
+exception
+    when others then
+        dbms_output.put_line(sqlcode || ' => ' || sqlerrm);
+end;
