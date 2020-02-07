@@ -18,3 +18,20 @@ create procedure procedure_name (parameter [in | out | in out] type) {is | as}
 begin
   code...
 end;  
+
+                                                Simple example of a procedure and its use
+                                                
+procedure addNums(num1 number, num2 number, resultNum out number) is 
+begin 
+    resultNum := num1 + num2; 
+end;
+/
+declare
+    num1 number := 5;
+    num2 number := 6;
+    resultNum number := 0;
+begin
+    addNums(num1, num2, resultNum);
+    dbms_output.put_line(num1 || ' + ' || num2 || ' = ' || resultNum);
+end;
+                                                    
