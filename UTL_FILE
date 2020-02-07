@@ -1,6 +1,6 @@
 --create directory on oracle database and reference that to your os path
 --grants read and write privileges to dir
-SQL> create dir 'UTL_DIR' as 'blah/blah/blah';
+SQL> create directory UTL_DIR as 'blah/blah/blah';
 SQL> grant read, write on dir 'UTL_DIR' to public;
 
 
