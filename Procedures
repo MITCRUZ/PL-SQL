@@ -1,0 +1,20 @@
+------------------------------------------------------------Procedures--------------------------------------------------------------------------
+
+                                                         Without Procedures
+
+begin
+  dbms_output.put_line('line 1');
+end; 
+
+                                                          With Procedures
+                                                          
+begin
+  print('my line');
+end;
+
+                                                Creating a Procedure with parameters
+                                                          
+create procedure procedure_name (parameter [in | out | in out] type) {is | as}
+begin
+  code...
+end;  
