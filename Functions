@@ -1,1 +1,53 @@
---Working on clever function for checking if a value is numeric or not!
+create or replace function number_check (v_input varchar2, v_debug varchar2) return varchar2 is
+/*=============================================================================================+                                                                                              | 
+ | DESCRIPTION -                                                                               | 
+ |    PASS THIS FUNCTION A string VALUE AND IT WILL TELL YOU IF IT'S A NUMBER.                 | 
+ |                                                                                             | 
+ | INPUT -                                                                                     | 
+ |    v_input                                                                                  |   
+ |    v_debug, Type in Y OR N TO INDICATE WHETHER TO ENABLE DEBUG MODE                         | 
+ |                                                                                             | 
+ | RETURN -                                                                                    | 
+ |    VARCHAR2                                                                                 |                                             
+ +============================================================================================*/  
+v_debug_on boolean := false;
+v_number number;
+
+begin
+    --Checks whether or not the user wants to run the debug operations.
+    if (upper(v_debug) = 'Y') then
+        v_debug_on := true;
+    end if;
+    
+    --At this point if the user input is not a numeric value, it will be caught by the VALUE_ERROR exception.
+    v_number := v_input;
+    
+    --If the code reaches this point, its safe to say that the end user input is numeric!
+    if (v_debug_on) then
+        dbms_output.put_line('Starting debugging operatoins...');
+        dbms_output.put_line('The value you entered was ' || v_number);
+    end if;
+    return 'The value you entered is numeric!';
+exception
+    --Catches and handles error caused by non-numeric input.
+    when VALUE_ERROR then 
+        if (v_debug_on) then
+            dbms_output.put_line(SQLERRM);
+        end if;
+        return 'The value you entered is non-numeric.';
+    --catches any other errors that might occur.
+    when OTHERS then
+        if (v_debug_on) then
+            dbms_output.put_line(SQLCODE || ' => ' || SQLERRM);
+        end if;
+        return 'There was an unexpected error.';
+end; 
+
+/
+
+declare
+    v_number_value varchar2(125);
+begin
+    v_number_value := number_check('-2982', 'n');
+    dbms_output.put_line(v_number_value);
+end;
