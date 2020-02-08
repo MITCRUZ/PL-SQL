@@ -46,6 +46,8 @@ end;
 /
 
 declare
+    --Make sure you make this value big enough in order to get the entire debug message in here!
+    --otherwise you will get an error
     v_number_value varchar2(125);
 begin
     v_number_value := number_check('-2982', 'n');
