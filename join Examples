@@ -1,35 +1,55 @@
 --The following tables (departments and employees) can be access through oracle live.
 
---Inner Join Example 
+--Inner Join Example: Includes all records from both tables that meet the ON clause condition
 select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
 from hr.departments dps join hr.employees emps
 on dps.department_id = emps.department_id
 order by dps.department_id;
 /
---Old Inner Join Example
+--Old Inner Join Example: Same as above Inner Join
 select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
 from hr.departments dps, hr.employees emps
 where dps.department_id = emps.department_id
 order by dps.department_id;
 /
---Left Outer Join Example
+--Left Outer Join Example: Includes everything in the first table as well as records from the second table that match the ON clause statement
 select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
 from hr.departments dps left join hr.employees emps
 on dps.department_id = emps.department_id
 order by dps.department_id;
 /
---Right Outer Join Example
+--Left Outer Join Example (with null): Includes everything in the first table excluding the second table as well as matching records that meet the ON clause condition
+select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
+from hr.departments dps left join hr.employees emps
+on dps.department_id = emps.department_id
+where emps.department_id is null
+order by dps.department_id;
+/
+--Right Outer Join Example: Includes evrything in the second table as well as records from the first table that match the On clause statement
 select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
 from hr.departments dps right join hr.employees emps
 on dps.department_id = emps.department_id
 order by dps.department_id;
 /
---Full Outer Join Example
+--Right Outer Join Example(with null): Includes evrything in the second table excluding the first table was well as matching records that meet the ON cluase condition
+select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
+from hr.departments dps right join hr.employees emps
+on dps.department_id = emps.department_id
+where dps.department_id is null
+order by dps.department_id;
+/
+--Full Outer Join Example: Includes everything from both tables but columns in which the data does not match will have a null value.
 select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
 from hr.departments dps full join hr.employees emps
 on dps.department_id = emps.department_id
 order by dps.department_id;
 /
+--Full Outer Join Example(with null): Includes everything from both tables but excludes records that meet the conditons of the ON clause statement
+select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
+from hr.departments dps full join hr.employees emps
+on dps.department_id = emps.department_id
+where dps.department_id is null or emps.department_id is null
+order by dps.department_id;
 
 
 
