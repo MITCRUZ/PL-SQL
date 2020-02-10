@@ -1,0 +1,36 @@
+--The following tables (departments and employees) can be access through oracle live.
+
+--Inner Join Example 
+select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
+from hr.departments dps join hr.employees emps
+on dps.department_id = emps.department_id
+order by dps.department_id;
+/
+--Old Inner Join Example
+select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
+from hr.departments dps, hr.employees emps
+where dps.department_id = emps.department_id
+order by dps.department_id;
+/
+--Left Outer Join Example
+select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
+from hr.departments dps left join hr.employees emps
+on dps.department_id = emps.department_id
+order by dps.department_id;
+/
+--Right Outer Join Example
+select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
+from hr.departments dps right join hr.employees emps
+on dps.department_id = emps.department_id
+order by dps.department_id;
+/
+--Full Outer Join Example
+select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
+from hr.departments dps full join hr.employees emps
+on dps.department_id = emps.department_id
+order by dps.department_id;
+/
+
+
+
+
