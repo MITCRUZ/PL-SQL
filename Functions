@@ -56,5 +56,25 @@ end;
 
                         Creates a table function that takes in a date and prints out the the day of the year (1-366)
 
-...
+--Creates an object which will act as a record for our nested table.
+create type o_day is object (
+    v_date date,
+    v_day int
+);
+
+--Creates the nested table which returns the o_day object.
+create type tbl_days is table of o_day;  
+
+--Creates the function which will return the collection of tables gathered. 
+create or replace function get_days (start_date date, number_of_days int) return tbl_days is
+    v_days tbl_days := tbl_days();
+begin
+    for i in 1 .. number_of_days loop
+        v_days.extend;
+        v_days(i) := o_day(start_date + i, to_number(to_char(start_date + i, 'DDD')));
+    end loop;
+    return v_days;
+end;
+/
+select * from table(get_days(sysdate, 50));
 
