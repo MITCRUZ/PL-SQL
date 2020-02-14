@@ -78,3 +78,14 @@ end;
 /
 select * from table(get_days(sysdate, 50));
 
+--Creates the pipelined table function which will return the object rather than the nested table as seen from the previous ex.
+create or replace function new_get_days (start_date date, number_of_days int) return tbl_days pipelined is    
+begin
+    for i in 1 .. number_of_days loop        
+        pipe row (o_day(start_date + i, to_number(to_char(start_date + i, 'DDD'))));
+    end loop;
+    return;
+end;
+/
+select * from table(new_get_days(sysdate, 50));
+
