@@ -53,3 +53,8 @@ begin
     v_number_value := number_check('-2982', 'n');
     dbms_output.put_line(v_number_value);
 end;
+
+                        Creates a table function that takes in a date and prints out the the day of the year (1-366)
+
+...
+
