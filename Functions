@@ -89,3 +89,12 @@ end;
 /
 select * from table(new_get_days(sysdate, 50));
 
+                                          --Takes in a date and returns the number of day [1, 366]
+create or replace function num_days (f_date date) return int is
+    f_day int;
+begin
+    f_day := to_number(to_char(f_date, 'DDD'));
+    return f_day;
+end;
+/
+exec dbms_output.put_line(num_days('1-JAN-20'));
