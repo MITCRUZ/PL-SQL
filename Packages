@@ -1,0 +1,101 @@
+--Package Spec
+create or replace package invoice_pkg is
+    /*
+        An associative array will be used to store data.
+        It is indexed by pls_integer to allow for better performace
+    */
+    type log_array is table of email_log%rowtype index by pls_integer;
+    
+    /*
+        This procedure calls other subprograms to popualte its local associative array. It then grabs each individual record and scans it individually via other 
+        subprograms to make sure none of the orders have a status of pending. If they do, then it will send an email to the customer and update it status to complete.
+    */
+    procedure scan_for_emails;
+    
+    /*
+        This function gathers the data from the email_log table storing it into an associative array.
+    */
+    function gather_data return log_array;
+    
+    /*
+        This function scans the record passed in the see if its status is set to pending, if it is then it sends an email to that customer.
+    */
+    function scan_data (v_record email_log%rowtype) return email_log%rowtype;
+    
+    /*
+        Sends an email to the customer
+    */
+    procedure send_email (v_record email_log%rowtype);
+end;
+
+--Package Body
+create or replace package body invoice_pkg is    
+    
+    procedure scan_for_emails is 
+    v_array log_array;
+    idx pls_integer;
+    v_record email_log%rowtype;
+    
+    begin
+        v_array := gather_data;
+        idx := v_array.first;
+        while idx is not null loop                      
+            v_record := scan_data(v_array(idx));            
+            idx := v_array.next(idx);                         
+            update email_log set status = 'COMPLETE' where order_id = v_record.order_id;                     
+        end loop;
+        
+    end;
+        
+    function gather_data return log_array is 
+    v_array log_array;
+    begin
+        for curr_order in (select * from email_log) loop
+            v_array(curr_order.order_id) := curr_order;
+        end loop;
+        return v_array;
+    end;
+    
+    
+    function scan_data (v_record email_log%rowtype) return email_log%rowtype is
+    v_array log_array;
+    idx pls_integer;
+    begin        
+        if v_record.status = 'PENDING' then
+            send_email(v_record);
+        end if;
+        return v_record;
+    end;
+    
+    
+    procedure send_email (v_record email_log%rowtype) is 
+    begin        
+      --EMAIL body not provided
+      EMAIL( 'Tester','Tester@domain.com',v_record.first_name,v_record.email,null,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'subject','test body',NULL,NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N' );
+    end;
+    
+end;
+========================================================================Running Requirements============================================================================
+--CREATES THE TABLE NEEDED TO RUN THE SUBPROGRAMS IN THE INVOICE_PKG PACKAGE
+create table email_log (
+    order_id number primary key,
+    first_name varchar2(55) not null,
+    last_name varchar2(55) not null,
+    address varchar2(155) not null,
+    phone_number number not null,
+    email varchar2(75) not null,
+    status varchar2(15) not null
+);
+
+--POPULATES OUR TABLE 
+BEGIN
+    insert into email_log values (1, 'Mike', 'Mike', '123 old street drive', 0001112222, 'mike@xmail.com', 'PENDING');
+    insert into email_log values (2, 'Stan', 'Stan', '456 old street drive', 0002224444, 'stan@xmail.com', 'PENDING');
+    insert into email_log values (3, 'Tim', 'Tim', '789 old street drive', 0003335555, 'tim@xmail.com', 'PENDING');
+END;
+
+--QUICK TEST TO MAKE SURE OUR TABLE POPULATED CORRECTLY
+select * from email_log;
+
+--STATEMENT NEEDED TO RUN PACKAGE
+execute invoice_pkg.scan_for_emails;
