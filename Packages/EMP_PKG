@@ -1,0 +1,106 @@
+--Package Spec
+
+create or replace package emp_pkg is
+  /*
+    Associative Array used to store data
+  */  
+  type emp_tbl is table of employees%rowtype index by pls_integer;
+ 
+  /*
+    A variable of type date which is used in filtering out the records in the employees_copy staging table.
+  */
+  base_date date := '01-JAN-1997';
+
+  /*
+    Creates a staging table with all records from the employees table
+  */
+  function base_table return emp_tbl;
+ 
+  /*
+    Creates a staging table which filters out all the records of employees who were hired before the base_date
+  */
+  function filtered_table return emp_tbl;
+
+  /*
+    Sets the filtered table's employees records department_id to 200 if it is already 100
+    if it is not 100, it sets it to 100. Hence, since it only changes the filtered tables department_id values, 
+    not all values will be changed.
+  */
+  function arrange_for_changes(v_emp in out employees%rowtype) return employees%rowtype;
+
+  /*
+    This procedure acts as the main procedure which calls all the other subprograms to accomplish its task
+  */
+  procedure run_pkg;
+
+end;
+
+
+/*******************************************************************************/
+create or replace package body emp_pkg is
+  function base_table return emp_tbl is 
+    v_emps emp_tbl;
+  begin
+    --Populates our associative array
+    for cur_emps in (select * from employees_copy) loop
+        v_emps(cur_emps.employee_id) := cur_emps;
+    end loop;
+    return v_emps;
+  end;
+  
+  function filtered_table return emp_tbl is
+    v_emps emp_tbl;
+    idx employees.employee_id%type;
+  begin
+    v_emps := base_table;
+    idx := v_emps.first;
+    while idx is not null loop
+      if v_emps(idx).hire_date < base_date then
+        v_emps.delete(idx);
+      end if;
+      idx := v_emps.next(idx);
+    end loop;
+    return v_emps;
+  end;
+
+  function arrange_for_changes(v_emp in out employees%rowtype) return employees%rowtype is
+  begin    
+    if v_emp.department_id = 100 then
+      v_emp.department_id := 200;
+    else
+      v_emp.department_id := 100;
+    end if;    
+    return v_emp;    
+  end;
+
+  procedure run_pkg is 
+    v_emps emp_tbl;
+    v_emp employees%rowtype;
+    idx employees.employee_id%type;
+  begin
+    v_emps := filtered_table;
+    idx := v_emps.first;
+    while idx is not null loop
+      v_emp := arrange_for_changes(v_emps(idx));
+      update employees_copy set row = v_emp where employee_id = idx;
+      idx := v_emps.next(idx);
+    end loop;
+  end;
+
+end;
+
+/*******************************************************************************/
+
+--Steps to test if everything runs smoothly
+
+--Creates a table that copies over the records from the employees table
+create table employees_copy as select * from employees;
+
+--Shows original state of table
+select * from employees_copy
+
+--Runs the package subprograms
+execute emp_pkg.run_pkg;
+
+--Allows us to see changes
+select * from employees_copy;
