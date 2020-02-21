@@ -1,0 +1,18 @@
+/*========================================================================================================+
+/                                                                                                         /
+/   FUNCTION                                                                                              /
+/     - NUM_DAYS                                                                                          /
+/                                                                                                         /
+/   DESCRIPTION                                                                                           /
+/     - TAKES IN A DATE AND RETURNS THE DAY OF YEAR [1, 366]                                              /
+/                                                                                                         /
+/   INPUT                                                                                                 /
+/     - F_DATE: INPUT OF TYPE DATE WHICH IS USED TO CALCULATE THE DAY OF THE YEARR                        /
+/                                                                                                         /
++========================================================================================================*/
+create or replace function num_days (f_date date) return int is
+    f_day int;
+begin
+    f_day := to_number(to_char(f_date, 'DDD'));
+    return f_day;
+end;
