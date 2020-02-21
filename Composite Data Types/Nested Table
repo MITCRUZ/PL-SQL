@@ -1,0 +1,86 @@
+
+                                                Declaring and Initializing a nested table:
+                                                
+declare 
+    --First example
+    type t_emps is table of varchar2(55);
+    emps t_emps;
+    
+    --Second example
+    type t_emps_2 is table of varchar2(55);
+    emps_2 t_emps_2 := t_emps_2('stan', 'tom', 'joe');
+    
+    --Third example
+    type t_emps_3 is table of varchar2(55);
+    emps_3 t_emps_3 := t_emps_3(); 
+
+                                                            Printing values:
+
+--for loop
+begin
+    for i in 1..emps_2.count loop
+        dbms_output.put_line(emps_2(i));
+    end loop;
+end;
+
+--while loop
+begin
+    while emps_2.exists(idx) loop
+        dbms_output.put_line(emps_2(idx));
+        idx := idx + 1;
+    end loop;
+end;
+
+--loop
+begin
+    loop    
+        exit when idx > emps_2.count;
+        dbms_output.put_line(emps_2(idx));
+        idx := idx + 1;
+    end loop;
+end;
+
+
+                                            Adding/Removing values after initialization
+
+begin
+    emps_3.extend;
+    emps_3(1) := 'bart';
+    emps_3.delete(1);
+    if emps_3.exists(1) then
+        dbms_output.put_line(emps_3(1));
+    end if;
+end;
+
+                                                  Adding values in from a table
+                                                  
+begin
+    --populates
+    for i in 100..110 loop
+        emps_3.extend;
+        select first_name into emps_3(idx) from hr.employees where employee_id = i;
+        idx := idx + 1;
+    end loop;
+    
+    --prints
+    for i in 1..emps_3.count loop
+        dbms_output.put_line(emps_3(i));
+    end loop;
+end;                
+
+                                                          Attributes:
+                                                          
+.count
+(prints the amount of elements stored in the array)
+.first
+(prints the first element in the varray)
+.last
+(prints the last element in the varray)
+.limit
+(prints maximum capacity of the varray)
+.exists()
+(returns true if an element exists in the current index)
+
+
+================================================================Notes===================================================================
+*Can be added to tables if created at schema level
