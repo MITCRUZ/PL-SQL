@@ -1,5 +1,3 @@
---Package Spec
-
 create or replace package emp_pkg is
   /*
     Associative Array used to store data
