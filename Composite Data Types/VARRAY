@@ -57,6 +57,7 @@ begin
     end loop;
 end; 
 
+
                                                     Storing varray's in tables
                                                     
 --creates an object at the schema level which acts as a record.
