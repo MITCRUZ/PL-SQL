@@ -1,5 +1,6 @@
                                                    
                                                Two ways to declare variables:
+                                               
     --First example
     emps hr.employees%rowtype;
     
