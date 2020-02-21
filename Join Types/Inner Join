@@ -1,0 +1,13 @@
+--The following tables (departments and employees) can be access through oracle live in the HR schema
+
+--Inner Join Example: Includes all records from both tables that meet the ON clause condition
+select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
+from hr.departments dps join hr.employees emps
+on dps.department_id = emps.department_id
+order by dps.department_id;
+
+--Old Inner Join Example: Same as above Inner Join
+select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
+from hr.departments dps, hr.employees emps
+where dps.department_id = emps.department_id
+order by dps.department_id;
