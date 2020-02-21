@@ -1,0 +1,106 @@
+                                                    Using cursors explicitly
+                                                  
+declare
+    cursor c_emps is select first_name, last_name, department_name from hr.employees join hr.departments 
+      using (department_id) where department_id between 30 and 60;
+      
+    v_first_name hr.employees.first_name%type;
+    v_last_name hr.employees.last_name%type;
+    v_department_name hr.departments.department_name%type;
+begin
+    open c_emps;
+    fetch c_emps into v_first_name, v_last_name, v_department_name;
+    dbms_output.put_line(v_first_name || ' ' || v_last_name || ' is in ' || v_department_name);
+    close c_emps;
+end;  
+
+                                                  Using records with cursors
+                                                  
+declare
+    type t_emps is record (
+        v_first_name hr.employees.first_name%type,
+        v_last_name hr.employees.last_name%type
+    );
+    emps t_emps;
+    
+    cursor c_emps is select first_name, last_name from hr.employees;
+begin
+    open c_emps;
+    fetch c_emps into emps;
+    dbms_output.put_line(emps.v_first_name || ' ' || emps.v_last_name);
+    close c_emps;
+end;
+
+                                                      Looping with Cursors
+--basic loop                                                      
+declare
+    cursor c_emps is select first_name, last_name from hr.employees;
+    emps c_emps%rowtype;
+begin
+    open c_emps;
+    loop
+        exit when c_emps%notfound;
+        fetch c_emps into emps;
+        dbms_output.put_line(emps.first_name || ' ' || emps.last_name);
+    end loop;
+    close c_emps;
+end;        
+
+--while loop
+declare
+    cursor c_emps is select first_name, last_name from hr.employees;
+    emps c_emps%rowtype;
+begin
+    open c_emps;
+    fetch c_emps into emps;
+    while c_emps%found loop
+        dbms_output.put_line(emps.first_name || ' ' || emps.last_name);
+        fetch c_emps into emps;
+    end loop;
+    close c_emps;
+end;
+
+--for loop
+--the most elegant way of looping through cursors
+declare
+    cursor c_emps is select first_name, last_name from hr.employees;
+begin
+    for i in c_emps loop
+        dbms_output.put_line(i.first_name || ' ' || i.last_name);
+    end loop;
+end;
+
+--can be condensed into 
+begin
+    for i in (select first_name, last_name from hr.employees) loop
+        dbms_output.put_line(i.first_name || ' ' || i.last_name);
+    end loop;
+end;
+
+                                                      Parameters with Cursors
+                                                      
+declare
+  cursor c_emps (p_dept_id number) is select first_name,last_name,department_name 
+                    from hr.employees join hr.departments using (department_id)
+                    where department_id = p_dept_id;
+  v_emps c_emps%rowtype;
+begin
+  open c_emps(:b_var);
+  fetch c_emps into v_emps;
+    dbms_output.put_line('The employees in department of '|| v_emps.department_name|| ' are :');
+    close c_emps;
+  open c_emps(:b_var);
+    loop
+      fetch c_emps into v_emps;
+      exit when c_emps%notfound;
+      dbms_output.put_line(v_emps.first_name|| ' ' ||v_emps.last_name);
+    end loop;
+  close c_emps;
+end;
+
+                                                            Attributes
+                                                            
+found: returns true if it finds an element.
+notfound: returns true if it finds nothing.
+isopen: returns true if the cursor is open.
+rowcount: returns the number of times the cursor was fetched.
