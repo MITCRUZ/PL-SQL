@@ -1,0 +1,17 @@
+/*******************************************************************************/
+
+--Steps to test if everything runs smoothly
+
+--Creates a table that copies over the records from the employees table
+create table employees_copy as select * from employees;
+
+--Shows original state of table
+select * from employees_copy
+
+--Runs the package subprograms
+execute emp_pkg.run_pkg;
+
+--Allows us to see changes
+select * from employees_copy;
+
+/*******************************************************************************/
