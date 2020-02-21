@@ -1,0 +1,34 @@
+/*========================================================================================================+
+/                                                                                                         /
+/   FUNCTION                                                                                              /
+/     - FIND_MIN                                                                                          /
+/                                                                                                         /
+/   DESCRIPTION                                                                                           /
+/     - FINDS THE SMALLEST NUMBER OF THE TWO INPUTS AND PRINTS IT OUT                                     /
+/                                                                                                         /
+/   INPUT                                                                                                 /
+/     - NUM1: AN OPERAND OF TYPE NUMBER                                                                   /
+/     - NUM2: AN OPERAND OF TYPE NUMBER                                                                   /
+/     - V_RESULT: A VARIABLE OF TYPE NUMBER WHICH CONTAINS THE SMALLEST NUMBER OF THE TWO OPERANDS        /
+/                                                                                                         /
++========================================================================================================*/
+procedure find_min (num1 number, num2 number, v_result out number) is 
+is_equal boolean := false; 
+begin 
+    if (num1 < num2) then 
+        v_result := num1; 
+    elsif (num1 > num2) then 
+        v_result := num2; 
+    else     
+        v_result := num1; 
+        is_equal := true; 
+    end if; 
+     
+    if (is_equal) then 
+        dbms_output.put_line('Both values are equal.'); 
+    end if; 
+    dbms_output.put_line('Yo, the minimum value here is ' || v_result); 
+exception 
+    when OTHERS then 
+        dbms_output.put_line('Yo, watch out, theres an error here: ' || SQLERRM); 
+end;        
