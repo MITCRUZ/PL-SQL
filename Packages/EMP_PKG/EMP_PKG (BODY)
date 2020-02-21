@@ -46,6 +46,7 @@ create or replace package body emp_pkg is
       update employees_copy set row = v_emp where employee_id = idx;
       idx := v_emps.next(idx);
     end loop;
+    dbms_output.put_line('Done...');
   end;
 
 end;
