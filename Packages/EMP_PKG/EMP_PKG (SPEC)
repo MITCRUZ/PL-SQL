@@ -1,0 +1,36 @@
+--Package Spec
+
+create or replace package emp_pkg is
+  /*
+    Associative Array used to store data
+  */  
+  type emp_tbl is table of employees%rowtype index by pls_integer;
+ 
+  /*
+    A variable of type date which is used in filtering out the records in the employees_copy staging table.
+  */
+  base_date date := '01-JAN-1997';
+
+  /*
+    Creates a staging table with all records from the employees table
+  */
+  function base_table return emp_tbl;
+ 
+  /*
+    Creates a staging table which filters out all the records of employees who were hired before the base_date
+  */
+  function filtered_table return emp_tbl;
+
+  /*
+    Sets the filtered table's employees records department_id to 200 if it is already 100
+    if it is not 100, it sets it to 100. Hence, since it only changes the filtered tables department_id values, 
+    not all values will be changed.
+  */
+  function arrange_for_changes(v_emp in out employees%rowtype) return employees%rowtype;
+
+  /*
+    This procedure acts as the main procedure which calls all the other subprograms to accomplish its task
+  */
+  procedure run_pkg;
+
+end;
