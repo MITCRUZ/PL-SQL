@@ -1,3 +1,3 @@
 # PL-SQL
 
-Contains pl/sql code.
+Contains pl/sql code and notes
