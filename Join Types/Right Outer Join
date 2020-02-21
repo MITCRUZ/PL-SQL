@@ -1,0 +1,14 @@
+--The following tables (departments and employees) can be access through oracle live in the HR schema
+
+--Right Outer Join Example: Includes evrything in the second table as well as records from the first table that match the On clause statement
+select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
+from hr.departments dps right join hr.employees emps
+on dps.department_id = emps.department_id
+order by dps.department_id;
+
+--Right Outer Join Example(with null): Includes evrything in the second table excluding the first table was well as matching records that meet the ON cluase condition
+select dps.department_id, department_name, dps.manager_id, location_id, first_name, last_name
+from hr.departments dps right join hr.employees emps
+on dps.department_id = emps.department_id
+where dps.department_id is null
+order by dps.department_id;
