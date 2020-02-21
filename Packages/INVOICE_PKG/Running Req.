@@ -13,7 +13,7 @@ create table email_log (
     confirmation_number varchar2(10)
 );
 
---POPULATES OUR TABLE 
+--POPULATES THE TABLE 
 
 BEGIN
     insert into email_log values (1, 'Mike', 'Mike', '123 old street drive', 0001112222, 'mike@xmail.com', 'PENDING');
