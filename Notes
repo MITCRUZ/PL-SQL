@@ -1,0 +1,23 @@
+Commit: Makes changes permanent and saves them to the database for other users to see.
+
+Rollback: Executed at the end of a current transaction to undo any changes made since the beginning of the transaction.
+
+Savepoint: Saves the current point in a transaction.
+
+DDL (Data Definition Language): CREATE, ALTER, DROP
+
+DML (Data Management Language): INSERT, UDATE, DELETE
+
+Sequence: An object in oracle that is used to generate a number sequence. This can be useful when you need to create a unique number to
+          act as a primary key. Simulates an auto number field.
+          
+Auto-Number Field: An automatically incremented numeric counter. Can be used to create an identity column which uniquely identifies each 
+                   record in a table.
+                   
+Cache: A collection of items of the same type stored in a hidden or inaccessible place so that future requests for that data can be 
+       served faster, which is faster than recomputing a result. The more requests that can be served from a cache, the faster the system
+       performs.
+       
+Cache Hit: When the requested data can be found in a cache.
+
+Cache Miss: When the requested data cannot be found in the cache.
