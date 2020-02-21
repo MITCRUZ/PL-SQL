@@ -1,0 +1,27 @@
+/*========================================================================================================+
+/                                                                                                         /
+/   FUNCTION                                                                                              /
+/     - ADD_NUMS                                                                                          /
+/                                                                                                         /
+/   DESCRIPTION                                                                                           /
+/     - TAKES IN TWO NUMBERS, ADDS THEM UP AND RETURNS THE SUM                                            /
+/                                                                                                         /
+/   INPUT                                                                                                 /
+/     - NUM1: FIRST OPERAND OF TYPE NUMBER                                                                /
+/     - NUM2: SECOND OPERAND OF TYPE NUMBER                                                               /
+/     - RESULTNUM: A VARIABLE OF INPUT WHICH WILL CONTAIN THE SUM OF THE TWO OPERANDS                     /
+/                                                                                                         /
++========================================================================================================*/
+procedure add_Nums(num1 number, num2 number, resultNum out number) is 
+begin 
+    resultNum := num1 + num2; 
+end;
+/
+declare
+    num1 number := 5;
+    num2 number := 6;
+    resultNum number := 0;
+begin
+    addNums(num1, num2, resultNum);
+    dbms_output.put_line(num1 || ' + ' || num2 || ' = ' || resultNum);
+end;
