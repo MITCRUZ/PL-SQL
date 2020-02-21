@@ -84,3 +84,7 @@ end;
 
 ================================================================Notes===================================================================
 *Can be added to tables if created at schema level
+*Acts as an unbounded array where the index starts at 1.
+*Allowed to add elements after initialization of variables.
+*Don't have to add elements consecutively.
+*Allowed to remove elements.
