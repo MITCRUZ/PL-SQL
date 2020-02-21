@@ -1,0 +1,29 @@
+/*========================================================================================================+
+/                                                                                                         /
+/   FUNCTION                                                                                              /
+/     - NEW_GET_DAYS                                                                                      /
+/                                                                                                         /
+/   DESCRIPTION                                                                                           /
+/     - RETURNS A OBJECT WITH DATA ABOUT CURRENT DATE AND NUMBER OF DAYS SINCE JAN 1 OF THAT YEAR         /
+/                                                                                                         /
+/   INPUT                                                                                                 /
+/     - START_DATE: A NUMBER TYPE WHICH REPRESENTS THE START DATE                                         /
+/     - NUMBER_OF_DAYS: AN INT TYPE WHICH TELLS THE PROGRAM HOW MANY ROWS TO PRINT OUT                    /
+/                                                                                                         /
++========================================================================================================*/
+create or replace function new_get_days (start_date date, number_of_days int) return tbl_days pipelined is    
+begin
+    for i in 1 .. number_of_days loop        
+        pipe row (o_day(start_date + i, to_number(to_char(start_date + i, 'DDD'))));
+    end loop;
+    return;
+end;
+
+--Creates an object which will act as a record for our nested table.
+create type o_day is object (
+    v_date date,
+    v_day int
+);
+
+--Creates the nested table which returns the o_day object.
+create type tbl_days is table of o_day;  
