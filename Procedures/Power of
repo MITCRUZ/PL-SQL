@@ -1,0 +1,25 @@
+/*========================================================================================================+
+/                                                                                                         /
+/   FUNCTION                                                                                              /
+/     - POW                                                                                               /
+/                                                                                                         /
+/   DESCRIPTION                                                                                           /
+/     - TAKES IN A NUMBER AND RETURNS THE NUMBER RAISED TO WHATEVER POWER IS INPUTED                      /
+/                                                                                                         /
+/   INPUT                                                                                                 /
+/     - TAREGT_NUM: A NUMBER TYPE WHICH REPRESENTS THE TARGET NUMBER TO RAISE                             /
+/     - POWER_OF: A NUMBER TYPE WHICH DETERMINES TO WHAT POWER THE TARGET_NUM WILL BE RAISED TO           /
+/     - V_RESULT: A NUMBER TYPE WHICH WILL CONTAIN THE RESULT                                             /
+/                                                                                                         /
++========================================================================================================*/
+create or replace procedure pow(target_num number, power_of number, v_result out number) is
+idx number := 0;
+base_num number := 1;
+begin
+    while idx < power_of loop  
+        base_num := base_num * target_num;
+        idx := idx + 1;
+    end loop;
+    v_result := base_num;
+    dbms_output.put_line(target_num || ' to the power of ' || power_of || ' is ' || v_result);
+end;
