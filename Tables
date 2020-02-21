@@ -1,6 +1,4 @@
-                                                              Tables
-                                                              
-                                                          Creating tables in PL/SQL:
+							Creating tables in PL/SQL
                                                           
 Create table my_table (
 	First_name varchar2(55),
@@ -11,27 +9,29 @@ Create table my_table (
 
 Create table my_table_2 as select * from hr.employees; 
 (The above query grabs all data and table structure from the employees table and inserts it into our new table.)
+
 Create table my_table_3 as select * from hr.employees where 1 = 2;
 (The above query grabs the table structure and sets it to our new table without the data.)
 
-                                                   Inserting values into the table:
+                                                   Inserting values into the table
 Insert into my_table values (‘stan’, ‘marsh’);
 
-                                                    Updating values in our table:
+                                                    Updating values in our table
                                                     
 Update my_table set first_name = ‘kenny’ where employee_id = 104;
 Update my_table set row = emps where employee_id = 105;
 
-                                                    Deleting values from our table:
+                                                    Deleting values from our table
+						    
 Delete from my_table
 (deletes everything from our table)
+
 Delete from my_table where employee_id = 104;
 (deletes only a specific row)
 
-						      Adding columns to a table:
+						      Adding columns to a table
 
 alter table my_table add department_id number not null;
 
-                                                          Removing a table:
-                                                          
+                                                          Removing a table
 Drop table my_table;
