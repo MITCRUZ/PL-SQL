@@ -1,0 +1,29 @@
+                                                   
+                                               Two ways to declare variables:
+    --First example
+    emps hr.employees%rowtype;
+    
+    --Second example
+    type r_emps is record (
+        first_name varchar2(55),
+        last_name varchar2(55)
+        );
+    emps_2 r_emps;
+
+                                               To insert values into the record:
+
+--First example
+select * into emps from hr.employees where employee_id = 101;
+
+--Second example
+select first_name, last_name into emps_2 from hr.employees where employee_id = 102;
+
+
+                                               To update the values in the record:
+--You can update any attribute from the record
+emps.first_name := ‘stan’;
+
+============================================================NOTES==========================================================================
+*We cannot declare records at schema level, but objects can be created at schema level and used as records  
+*If you have a record inside a record, it will need its own select clause if you want to insert values into it.
+*Records don’t have any attributes like collections do.
