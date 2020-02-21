@@ -1,15 +1,5 @@
 create or replace function number_check (v_input varchar2, v_debug varchar2) return varchar2 is
-/*=============================================================================================+                                                                                              | 
- | DESCRIPTION -                                                                               | 
- |    PASS THIS FUNCTION A string VALUE AND IT WILL TELL YOU IF IT'S A NUMBER.                 | 
- |                                                                                             | 
- | INPUT -                                                                                     | 
- |    v_input                                                                                  |   
- |    v_debug, Type in Y OR N TO INDICATE WHETHER TO ENABLE DEBUG MODE                         | 
- |                                                                                             | 
- | RETURN -                                                                                    | 
- |    VARCHAR2                                                                                 |                                             
- +============================================================================================*/  
+
 v_debug_on boolean := false;
 v_number number;
 
