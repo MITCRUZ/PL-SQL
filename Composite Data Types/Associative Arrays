@@ -1,0 +1,174 @@
+
+                                              Declaring and Initialzing Associative Arrays
+
+declare 
+    type t_emps is table of varchar2(55) index by pls_integer;
+    emps t_emps;
+
+    
+                                                 Adding/Removing values after declaring:  
+                                                 
+declare 
+    type t_emps is table of varchar2(55) index by pls_integer;
+    emps t_emps;
+begin
+    --populates
+    for i in 100..110 loop
+        select first_name into emps(i) from hr.employees where employee_id = i;
+    end loop;
+    emps(111) := 'me';
+    emps.delete(110);    
+end;                                                 
+
+
+                                    Iterating through a non-sequential Associative Array with while loops 
+                                    
+declare 
+    type t_emps is table of varchar2(55) index by pls_integer;
+    emps t_emps;
+    idx pls_integer;
+begin
+    emps(100) := 'billy';
+    emps(225) := 'joe';
+    
+    idx := emps.first;
+    while idx is not null loop
+      dbms_output.put_line(emps(idx));
+      idx := emps.next(idx);
+    end loop;
+end;
+
+
+                                      Iterating through an Associative Array with strings for keys 
+                                      
+declare
+    type t_emps is table of varchar2(55) index by varchar2(225);
+    emps t_emps;
+    idx varchar2(225);
+    v_first_name varchar2(55);
+    v_email hr.employees.email%type;
+begin
+  --Populate
+  for i in 100..110 loop
+    select first_name, email into v_first_name, v_email from hr.employees where employee_id = i;
+    emps(v_email) := v_first_name;
+  end loop;
+  
+  --Print
+  idx := emps.first;
+  while idx is not null loop
+    dbms_output.put_line(emps(idx) || '\s email is ' || idx);
+    idx := emps.next(idx);
+  end loop;
+end;
+
+                                                             Printing in reverse:
+                                                             
+declare
+    type t_emps is table of varchar2(55) index by varchar2(225);
+    emps t_emps;
+    idx varchar2(225);
+    v_first_name varchar2(55);
+    v_email hr.employees.email%type;
+begin
+  --Populate
+  for i in 100..110 loop
+    select first_name, email into v_first_name, v_email from hr.employees where employee_id = i;
+    emps(v_email) := v_first_name;
+  end loop;
+  
+  --print
+  idx := emps.last;
+  while idx is not null loop
+    dbms_output.put_line(emps(idx) || '\s email is ' || idx);
+    idx := emps.prior(idx);
+  end loop;
+end;                                                             
+
+                                                Using Associative Arrays with Records
+                                                
+declare
+    type t_emps is table of hr.employees%rowtype index by varchar2(225);
+    emps t_emps;
+    idx varchar2(225);
+begin
+  --Populate
+  for i in 100..110 loop
+    select * into emps(i) from hr.employees where employee_id = i;
+  end loop;
+  
+  --print
+  idx := emps.first;
+  while idx is not null loop
+    dbms_output.put_line('The email of ' || emps(idx).first_name || ' is ' || emps(idx).email);
+    idx := emps.next(idx);
+  end loop;
+end;
+
+                              Random Code (Finds the person with the highest salary and cuts it down to 0!) 
+                                                          
+declare
+    type a_emps is table of hr.employees%rowtype index by varchar2(95);
+    emps a_emps;
+    idx varchar2(95);
+    v_max_salary number := 0;
+    victim varchar2(95);
+begin
+    for i in 100 .. 109 loop
+        select * into emps(i) from hr.employees where employee_id = i;
+    end loop;
+    
+    idx := emps.last;
+    while idx is not null loop
+        if emps.exists(idx) then
+            dbms_output.put_line(emps(idx).first_name || ' has an email of ' || emps(idx).email || ' and a salary of ' || emps(idx).salary);
+            idx := emps.prior(idx);
+        end if;
+    end loop;
+    
+    --prints out the person with the highest salary and reduces their salary to 0!
+    idx := emps.first;
+    while idx is not null loop
+        if emps(idx).salary > v_max_salary then
+            v_max_salary := emps(idx).salary;
+            victim := emps(idx).first_name;
+        end if;
+        idx := emps.next(idx);
+    end loop;
+    
+    idx := emps.last;
+    while idx is not null loop
+        if emps(idx).first_name = victim then
+            emps(idx).salary := 0;
+            goto print_me;
+        end if;
+        idx := emps.prior(idx);
+    end loop;
+    
+    <<print_me>>
+    dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------');
+    dbms_output.put_line('The person who had the highest salary was: ' || victim);
+    dbms_output.put_line(victim || 's salary used to be ' || v_max_salary || ', but now, after a series of unfortunate events it is now '
+        || '0!');
+end;                  
+
+                                                          Attributes:
+                                                          
+.count
+(prints the amount of elements stored in the array)
+.first
+(prints the first element in the varray)
+.last
+(prints the last element in the varray)
+.limit
+(prints maximum capacity of the varray)
+.exists()
+(returns true if an element exists in the current index)
+                            
+
+
+=================================================================Notes==================================================================
+*The variables we create are stored in the PGA (Program Global Area) when the program runs.
+*Associative arrays cannot be added to tables.
+*They are unbounded and their indexes do not have to begin a 1, they dont even have to be a numeric type it can be a varchar2 for example.
+*While iterating through non-sequential indexes or through non-numeric indexes, it is best to loop through Nested Tables via while loops.
