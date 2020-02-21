@@ -8,7 +8,7 @@ create table employees_copy as select * from employees;
 --Shows original state of table
 select * from employees_copy
 
---Runs the package subprograms
+--Runs the package
 execute emp_pkg.run_pkg;
 
 --Allows us to see changes
