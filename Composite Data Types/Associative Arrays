@@ -170,5 +170,10 @@ end;
 =================================================================Notes==================================================================
 *The variables we create are stored in the PGA (Program Global Area) when the program runs.
 *Associative arrays cannot be added to tables.
-*They are unbounded and their indexes do not have to begin a 1, they dont even have to be a numeric type it can be a varchar2 for example.
-*While iterating through non-sequential indexes or through non-numeric indexes, it is best to loop through Nested Tables via while loops.
+*Acts as an unbounded array where the index can start from any range (not neccessarily 1).
+*The keys may be a string unlike the other collection types but they must be unique.
+*Keys do not need to be sequential so so you can have a negative key.
+
+
+
+
