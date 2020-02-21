@@ -28,3 +28,4 @@ emps.first_name := ‘stan’;
 *We cannot declare records at schema level, but objects can be created at schema level and used as records  
 *If you have a record inside a record, it will need its own select clause if you want to insert values into it.
 *Records don’t have any attributes like collections do.
+*Commonly used when storing related data with the same or different data types as one row (only one row).
