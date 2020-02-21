@@ -1,0 +1,64 @@
+CREATE OR REPLACE package IMSI_CUSTOM.invoice_pkg is
+    /*
+        An associative array will be used to store data.
+        It is indexed by pls_integer to allow for better performace
+    */
+    type log_array is table of email_log%rowtype index by pls_integer;                
+    
+    /*
+        This procedure calls other subprograms to popualte its local associative array. It then grabs each individual record and scans it individually via other 
+        subprograms to make sure none of the orders have a status of pending. If they do, then it will send an email to the customer and update it status to complete.
+    */
+    procedure scan_for_emails(P_ERR_BUF OUT VARCHAR2, P_MSG_BUFF OUT VARCHAR2);
+    
+    /*
+        This function gathers the data from the email_log table storing it into an associative array.
+    */
+    function gather_data return log_array;
+    
+    /*
+        This function scans the record passed in the see if its status is set to pending, if it is then it sends an email to that customer.
+    */
+    function scan_data (v_record email_log%rowtype) return email_log%rowtype;
+    
+    /*
+        Sends an email to the customer
+    */
+    procedure send_email (v_record email_log%rowtype);
+    
+    /*
+        Resets the status of all of the records from the email_log table to PENDING
+    */
+    procedure reset_record_status;
+    
+    /*
+        Sets the status of all of the records to COMPLETE
+    */
+    procedure complete_all_records;
+    
+    /*
+        Sets half of the orders status from the email_log table to COMPLETE
+    */    
+    procedure complete_random_orders;
+        
+    /*
+        Creates an invoice with purchase information from the customer
+    */
+    function produce_invoice(v_record email_log%rowtype) return UTL_FILE.FILE_TYPE;
+    
+    /*
+        Checks the status of them email_log table at the time it was called
+    */
+    function scan_data_for_pending (v_record email_log%rowtype) return varchar2;
+    
+    /*
+        Genrates a random 10 digit confirmation number for the customer
+   */
+   function generate_confirmation_number return varchar2; 
+   
+   /*
+        When called, this procedure populates the email_log tabl with unique confirmation numbers for the customers
+   */
+   procedure populate_with_conf_num;
+end;
+/
