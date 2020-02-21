@@ -1,0 +1,213 @@
+CREATE OR REPLACE package body IMSI_CUSTOM.invoice_pkg is    
+    
+    procedure scan_for_emails(P_ERR_BUF OUT VARCHAR2, P_MSG_BUFF OUT VARCHAR2) is 
+    v_array log_array;
+    idx pls_integer;
+    v_record email_log%rowtype;    
+    begin
+        APPS.FND_FILE.PUT_LINE(APPS.FND_FILE.LOG,'Execution Started At: '|| TO_CHAR(SYSDATE,'DD-MON-YYYY HH:MI:SS AM'));
+        v_array := gather_data;
+        idx := v_array.first;
+        while idx is not null loop                      
+            v_record := scan_data(v_array(idx));            
+            idx := v_array.next(idx);                         
+            update email_log set status = 'COMPLETE' where order_id = v_record.order_id;                     
+        end loop;
+        APPS.FND_FILE.PUT_LINE(APPS.FND_FILE.LOG,'Execution COMPLETED At: '|| TO_CHAR(SYSDATE,'DD-MON-YYYY HH:MI:SS AM'));
+    exception
+    when others then
+        print('There was an unexpected error.');
+        print(SQLCODE || ' => ' || SQLERRM);        
+    end;
+        
+    function gather_data return log_array is 
+    v_array log_array;
+    V_TEST VARCHAR2(25);
+    begin
+        APPS.FND_FILE.PUT_LINE(APPS.FND_FILE.LOG,'INSIDE GATHER DATA '|| TO_CHAR(SYSDATE,'DD-MON-YYYY HH:MI:SS AM'));
+        for curr_order in (select * from email_log) loop
+            v_array(curr_order.order_id) := curr_order;
+            V_TEST := CURR_ORDER.ORDER_ID;
+        end loop;
+        APPS.FND_FILE.PUT_LINE(APPS.FND_FILE.LOG,'LEAVING GATHER DATA, curr_order='|| v_TEST);
+        return v_array;        
+    exception
+    when others then
+        print('There was an unexpected error.');
+        print(SQLCODE || ' => ' || SQLERRM);
+        return v_array;        
+    end;
+    
+    
+    function scan_data (v_record email_log%rowtype) return email_log%rowtype is
+    e_record email_log%rowtype;
+    v_array log_array;
+    idx pls_integer;
+    begin        
+        if v_record.status = 'PENDING' then
+            APPS.FND_FILE.PUT_LINE(APPS.FND_FILE.LOG,'SENDING EMAIL '|| TO_CHAR(SYSDATE,'DD-MON-YYYY HH:MI:SS AM'));
+            send_email(v_record);
+            ELSE
+            APPS.FND_FILE.PUT_LINE(APPS.FND_FILE.LOG,'NOT SENDING EMAIL '|| TO_CHAR(SYSDATE,'DD-MON-YYYY HH:MI:SS AM'));
+        end if;
+        return v_record;
+    exception
+    when others then
+        print('There was an unexpected error.');
+        print(SQLCODE || ' => ' || SQLERRM);    
+        return e_record;    
+    end;
+    
+    
+    procedure send_email (v_record email_log%rowtype) is 
+    begin  
+        /*
+        IMSI_CUSTOM.IMSI_EMAIL ( 'Administrator','Administrator@imsready.com',v_record.first_name,v_record.email,null,NULL,NULL,NULL,
+            NULL,NULL,NULL,NULL,NULL,NULL,'subject','Invoice',1000,'C:\Users\mitchel_cruz\Documents\files\PRINT\readme.txt', 'invoice_pkg.produce_invoice(v_record)', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N' );
+        */ 
+             
+        
+        IMSI_CUSTOM.IMSI_EMAIL ( 'Administrator','Administrator@imsready.com',v_record.first_name,v_record.email,null,NULL,NULL,NULL,
+            NULL,NULL,NULL,NULL,NULL,NULL,'subject','Invoice',NULL,'/futl/tmp/AR_Lines_20200219.csv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N' );
+        
+    exception
+    when others then
+        print('There was an unexpected error.');
+        print(SQLCODE || ' => ' || SQLERRM);            
+    end;
+    
+    function produce_invoice(v_record email_log%rowtype) return UTL_FILE.FILE_TYPE is
+    f_handle UTL_FILE.FILE_TYPE;
+    p_conf_num email_log.confirmation_number%type;
+    begin
+        select confirmation_number into p_conf_num from email_log where order_id = v_record.order_id;
+        f_handle := UTL_FILE.FOPEN('MITCRUZ_DIR', 'Customer Invoice', 'W');
+        
+        UTL_FILE.PUT_LINE(f_handle, 'Customer: ' || v_record.first_name || ' ' || v_record.last_name);
+        UTL_FILE.PUT_LINE(f_handle, 'Deliver To: ' || v_record.address);
+        UTL_FILE.PUT_lINE(f_handle, 'Contact Information: ' || v_record.phone_number);
+        UTL_FILE.PUT_LINE(f_handle, 'Confirmation Number: ' || p_conf_num);
+        
+        UTL_FILE.FCLOSE(f_handle);
+    exception
+    when others then
+        print('There was an unexpected error.');
+        print(SQLCODE || ' => ' || SQLERRM);
+        return f_handle;        
+    end;
+    
+    procedure reset_record_status is
+    begin
+        for curr_rec in (select * from email_log) loop
+            update email_log set status = 'PENDING' where order_id = curr_rec.order_id;
+        end loop;
+    exception
+    when others then
+        print('There was an unexpected error.');
+        print(SQLCODE || ' => ' || SQLERRM);        
+    end;
+    
+    procedure complete_all_records is
+    begin
+        for curr_rec in (select * from email_log) loop
+            update email_log set status = 'COMPLETE' where order_id = curr_rec.order_id;
+        end loop;
+    exception
+    when others then
+        print('There was an unexpected error.');
+        print(SQLCODE || ' => ' || SQLERRM);        
+    end;    
+        
+    --PENDING
+    procedure complete_random_orders is 
+    --Allows only half of the records to be set to complete   
+    total_changes_allowed pls_integer;
+    --Holds the number of records that have been set to complete
+    curr_changes pls_integer := 0;
+    --Holds the total number of records in the email_log table
+    num_of_records pls_integer;   
+    --Holds a randomly generated number  
+    id_num pls_integer;
+    --Grabs the status of the target record before the update    
+    old_status varchar2(15);
+    --Grabs the status of the target record after the update
+    new_status varchar2(15);
+    --control number
+    v_attempts pls_integer := 0;
+    begin                  
+        select count(*) into num_of_records from email_log;  
+        print('num_of_records = ' || num_of_records);    
+        total_changes_allowed := num_of_records / 2; 
+        print('total_changes_allowed = ' || total_changes_allowed);
+        while curr_changes < total_changes_allowed loop  
+            <<v_continue>>
+            if (v_attempts > num_of_records) then 
+                goto l_finish;
+            end if;                    
+            id_num := trunc(dbms_random.value(1, num_of_records + 1));  
+            --Grabs a random record from the email_logs table
+            for curr_cust in (select * from email_log where order_id = id_num) loop                                                                                                                          
+                old_status := scan_data_for_pending(curr_cust);
+                print('old status: ' || old_status);
+                update email_log set status = 'COMPLETE' where order_id = id_num;
+                new_status := scan_data_for_pending(curr_cust);
+                print('new status: ' || new_status);
+                --If a records status has been changed, then increment curr_changes by 1 and grab a new random record to change
+                if (old_status = 'PENDING' and new_status = 'COMPLETE') then
+                    curr_changes := curr_changes + 1;                    
+                    goto v_continue;
+                end if; 
+                v_attempts := v_attempts + 1;
+                --If the flow of execution gets to this point, then no new changes have been made so curr_changes is not incremented but we continue the process.            
+                goto v_continue; 
+            end loop;       
+         end loop; 
+         <<l_finish>>
+         print('Number of changes: ' || curr_changes);    
+    exception
+    when others then
+        print('There was an unexpected error.');
+        print(SQLCODE || ' => ' || SQLERRM);                       
+    end;   
+
+    --PENDING               
+    function scan_data_for_pending (v_record email_log%rowtype) return varchar2 is    
+    begin        
+        if v_record.status = 'PENDING' then
+            return 'PENDING';
+        else
+            return 'COMPLETE';
+        end if;
+    exception
+    when others then
+        print('There was an unexpected error.');        
+        return (SQLCODE || ' => ' || SQLERRM);   
+    end;
+        
+    function generate_confirmation_number return varchar2 is
+    v_conf_num varchar2(10);
+    begin
+        for i in 1 .. 10 loop
+            v_conf_num := v_conf_num || trunc(dbms_random.value(1, 9));            
+        end loop;
+        return v_conf_num;
+    exception
+    when others then
+        print('There was an unexpected error.');
+        return(SQLCODE || ' => ' || SQLERRM);        
+    end;
+            
+    procedure populate_with_conf_num is
+    begin
+        for curr_cust in (select * from email_log) loop
+            update email_log set confirmation_number = generate_confirmation_number where order_id = curr_cust.order_id;
+        end loop;
+    exception
+    when others then
+        print('There was an unexpected error.');
+        print(SQLCODE || ' => ' || SQLERRM);        
+    end;
+end;
+/
