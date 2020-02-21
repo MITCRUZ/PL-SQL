@@ -99,3 +99,7 @@ select e.first_name, e.last_name, w.p_type, w.p_number from emps_with_phones e, 
                                                             
 ==============================================================NOTES=====================================================================
 *Can be added to tables if created at schema level
+*Acts as a bounded array where the index starts at 1.
+*Cannot add elements into the array once initialized with values.
+*Cannot remove arrays [.delete()]
+*Must add elements consecutively.
