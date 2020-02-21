@@ -14,6 +14,7 @@ CREATE OR REPLACE package body IMSI_CUSTOM.invoice_pkg is
             update email_log set status = 'COMPLETE' where order_id = v_record.order_id;                     
         end loop;
         APPS.FND_FILE.PUT_LINE(APPS.FND_FILE.LOG,'Execution COMPLETED At: '|| TO_CHAR(SYSDATE,'DD-MON-YYYY HH:MI:SS AM'));
+        dbms_output.put_line('Done...');
     exception
     when others then
         print('There was an unexpected error.');
