@@ -173,7 +173,4 @@ end;
 *Acts as an unbounded array where the index can start from any range (not neccessarily 1).
 *The keys may be a string unlike the other collection types but they must be unique.
 *Keys do not need to be sequential so so you can have a negative key.
-
-
-
-
+*You should iterate through an associative array via while loops when the elements are not sequential or when their type is varchar2.
