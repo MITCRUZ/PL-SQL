@@ -12,14 +12,14 @@ CREATE OR REPLACE package IMSI_CUSTOM.invoice_pkg is
     procedure scan_for_emails(P_ERR_BUF OUT VARCHAR2, P_MSG_BUFF OUT VARCHAR2);
     
     /*
-        This function gathers the data from the email_log table storing it into an associative array
+        This function gathers the data from the email_log table storing it into an associative array.
     */
     function gather_data return log_array;
     
     /*
         This function scans the record passed in the see if its status is set to pending, if it is then it sends an email to that customer.
     */
-    function scan_data (v_record email_log%rowtype) return email_log%rowtype;
+    function scan_data_and_send (v_record email_log%rowtype) return email_log%rowtype;
     
     /*
         Sends an email to the customer
