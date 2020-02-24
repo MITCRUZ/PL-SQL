@@ -1,36 +1,49 @@
 CREATE OR REPLACE package body IMSI_CUSTOM.invoice_pkg is    
     
+    --Procedure to call to run package
     procedure scan_for_emails(P_ERR_BUF OUT VARCHAR2, P_MSG_BUFF OUT VARCHAR2) is 
+    --Creates an associative array
     v_array log_array;
     idx pls_integer;
+    --Creates a record of the same structure as the email_log table
     v_record email_log%rowtype;    
     begin
+        --Used for debugging
         APPS.FND_FILE.PUT_LINE(APPS.FND_FILE.LOG,'Execution Started At: '|| TO_CHAR(SYSDATE,'DD-MON-YYYY HH:MI:SS AM'));
+        --Calls a function which populates our associative array with all the data from the email_log table
         v_array := gather_data;
-        idx := v_array.first;
-        while idx is not null loop                      
-            v_record := scan_data(v_array(idx));            
+        --Initializes the index to the first element of our associative array
+        idx := v_array.first;        
+        while idx is not null loop                                  
+            v_record := scan_data_and_send(v_array(idx));            
             idx := v_array.next(idx);                         
             update email_log set status = 'COMPLETE' where order_id = v_record.order_id;                     
         end loop;
         APPS.FND_FILE.PUT_LINE(APPS.FND_FILE.LOG,'Execution COMPLETED At: '|| TO_CHAR(SYSDATE,'DD-MON-YYYY HH:MI:SS AM'));
-        dbms_output.put_line('Done...');
     exception
     when others then
         print('There was an unexpected error.');
         print(SQLCODE || ' => ' || SQLERRM);        
     end;
         
+    --Copies over all the data from the email_log table to our staging table
     function gather_data return log_array is 
+    --Creates an associative array
     v_array log_array;
+    --Used for debugging
     V_TEST VARCHAR2(25);
     begin
+        --Used for debugging
         APPS.FND_FILE.PUT_LINE(APPS.FND_FILE.LOG,'INSIDE GATHER DATA '|| TO_CHAR(SYSDATE,'DD-MON-YYYY HH:MI:SS AM'));
+        --Grabs a record from the email_log table
         for curr_order in (select * from email_log) loop
+            --Stores the current order in our associative array
             v_array(curr_order.order_id) := curr_order;
             V_TEST := CURR_ORDER.ORDER_ID;
         end loop;
+        --Used for debugging
         APPS.FND_FILE.PUT_LINE(APPS.FND_FILE.LOG,'LEAVING GATHER DATA, curr_order='|| v_TEST);
+        --Returns the associative array with all of the data from the email_log table
         return v_array;        
     exception
     when others then
@@ -39,17 +52,20 @@ CREATE OR REPLACE package body IMSI_CUSTOM.invoice_pkg is
         return v_array;        
     end;
     
-    
-    function scan_data (v_record email_log%rowtype) return email_log%rowtype is
+    --Filters out the array to only send emails to customers who have not yet received their invoice
+    function scan_data_and_send (v_record email_log%rowtype) return email_log%rowtype is
+    --Creates a record 
     e_record email_log%rowtype;
+    --Creates an associative array
     v_array log_array;
     idx pls_integer;
     begin        
+        --Sends an email if the status of the record is PENDING 
         if v_record.status = 'PENDING' then
             APPS.FND_FILE.PUT_LINE(APPS.FND_FILE.LOG,'SENDING EMAIL '|| TO_CHAR(SYSDATE,'DD-MON-YYYY HH:MI:SS AM'));
-            send_email(v_record);
+            send_email(v_record);            
             ELSE
-            APPS.FND_FILE.PUT_LINE(APPS.FND_FILE.LOG,'NOT SENDING EMAIL '|| TO_CHAR(SYSDATE,'DD-MON-YYYY HH:MI:SS AM'));
+            APPS.FND_FILE.PUT_LINE(APPS.FND_FILE.LOG,'NOT SENDING EMAIL '|| TO_CHAR(SYSDATE,'DD-MON-YYYY HH:MI:SS AM'));            
         end if;
         return v_record;
     exception
@@ -58,17 +74,10 @@ CREATE OR REPLACE package body IMSI_CUSTOM.invoice_pkg is
         print(SQLCODE || ' => ' || SQLERRM);    
         return e_record;    
     end;
-    
-    
-    procedure send_email (v_record email_log%rowtype) is 
-    begin  
-        /*
-        IMSI_CUSTOM.IMSI_EMAIL ( 'Administrator','Administrator@imsready.com',v_record.first_name,v_record.email,null,NULL,NULL,NULL,
-            NULL,NULL,NULL,NULL,NULL,NULL,'subject','Invoice',1000,'C:\Users\mitchel_cruz\Documents\files\PRINT\readme.txt', 'invoice_pkg.produce_invoice(v_record)', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
-            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N' );
-        */ 
-             
         
+    --Sends an excel file via email to the current customer
+    procedure send_email (v_record email_log%rowtype) is 
+    begin                              
         IMSI_CUSTOM.IMSI_EMAIL ( 'Administrator','Administrator@imsready.com',v_record.first_name,v_record.email,null,NULL,NULL,NULL,
             NULL,NULL,NULL,NULL,NULL,NULL,'subject','Invoice',NULL,'/futl/tmp/AR_Lines_20200219.csv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N' );
@@ -79,12 +88,13 @@ CREATE OR REPLACE package body IMSI_CUSTOM.invoice_pkg is
         print(SQLCODE || ' => ' || SQLERRM);            
     end;
     
+    --Creates an return a file which conatins basic info about an order (CURRENTLY NOT USED).   
     function produce_invoice(v_record email_log%rowtype) return UTL_FILE.FILE_TYPE is
     f_handle UTL_FILE.FILE_TYPE;
     p_conf_num email_log.confirmation_number%type;
     begin
         select confirmation_number into p_conf_num from email_log where order_id = v_record.order_id;
-        f_handle := UTL_FILE.FOPEN('MITCRUZ_DIR', 'Customer Invoice', 'W');
+        f_handle := UTL_FILE.FOPEN('INSERT DIR NAME', 'Customer Invoice', 'W');
         
         UTL_FILE.PUT_LINE(f_handle, 'Customer: ' || v_record.first_name || ' ' || v_record.last_name);
         UTL_FILE.PUT_LINE(f_handle, 'Deliver To: ' || v_record.address);
@@ -99,9 +109,12 @@ CREATE OR REPLACE package body IMSI_CUSTOM.invoice_pkg is
         return f_handle;        
     end;
     
+    --Sets all record status's to PENDING (USED FOR TESTING PURPOSES)
     procedure reset_record_status is
     begin
+        --Grabs a record from the email_log table
         for curr_rec in (select * from email_log) loop
+            --Updates the current records status to PENDING
             update email_log set status = 'PENDING' where order_id = curr_rec.order_id;
         end loop;
     exception
@@ -110,9 +123,12 @@ CREATE OR REPLACE package body IMSI_CUSTOM.invoice_pkg is
         print(SQLCODE || ' => ' || SQLERRM);        
     end;
     
+    --Sets all the records status's to COMPLETE (USED FOR TESTING PURPOSES)
     procedure complete_all_records is
     begin
+        --Grabs a record from the email_log table
         for curr_rec in (select * from email_log) loop
+            --Updates the records status to COMPLETE
             update email_log set status = 'COMPLETE' where order_id = curr_rec.order_id;
         end loop;
     exception
@@ -121,7 +137,7 @@ CREATE OR REPLACE package body IMSI_CUSTOM.invoice_pkg is
         print(SQLCODE || ' => ' || SQLERRM);        
     end;    
         
-    --PENDING
+    --INCOMPLETE (needs work)
     procedure complete_random_orders is 
     --Allows only half of the records to be set to complete   
     total_changes_allowed pls_integer;
@@ -173,7 +189,7 @@ CREATE OR REPLACE package body IMSI_CUSTOM.invoice_pkg is
         print(SQLCODE || ' => ' || SQLERRM);                       
     end;   
 
-    --PENDING               
+    --Returns the status of the current record (USELESS)               
     function scan_data_for_pending (v_record email_log%rowtype) return varchar2 is    
     begin        
         if v_record.status = 'PENDING' then
@@ -187,22 +203,29 @@ CREATE OR REPLACE package body IMSI_CUSTOM.invoice_pkg is
         return (SQLCODE || ' => ' || SQLERRM);   
     end;
         
+    --Generates a 10 digit confirmation number and return it as varchar2
     function generate_confirmation_number return varchar2 is
     v_conf_num varchar2(10);
     begin
+        --Runs 10 times
         for i in 1 .. 10 loop
+            --Appends a random number from 1 to 9 to our variable
             v_conf_num := v_conf_num || trunc(dbms_random.value(1, 9));            
         end loop;
+        --Returns result 
         return v_conf_num;
     exception
     when others then
         print('There was an unexpected error.');
         return(SQLCODE || ' => ' || SQLERRM);        
     end;
-            
+     
+    --Populates every record in the email_log table with a confirmation number.
     procedure populate_with_conf_num is
     begin
+        --Grabs a record from the email_log table
         for curr_cust in (select * from email_log) loop
+            --Sets a unique confirmation number to every customer in our email_log table.
             update email_log set confirmation_number = generate_confirmation_number where order_id = curr_cust.order_id;
         end loop;
     exception
