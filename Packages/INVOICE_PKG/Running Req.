@@ -26,3 +26,7 @@ select * from email_log;
 
 --STATEMENT NEEDED TO RUN PACKAGE
 execute invoice_pkg.scan_for_emails;
+
+--Creates unique confirmation numbers for every customer
+exec invoice_pkg.populate_with_conf_num;
+
