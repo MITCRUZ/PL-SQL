@@ -1,0 +1,236 @@
+--The email_log table contains the following attributes: order_id, first_name, last_name, address, 
+--phone_number, email, status, confirmation_number in that order
+set serveroutput on
+
+--Records
+declare
+    type r_cust is record (
+        first_name email_log.first_name%type,
+        last_name email_log.last_name%type,
+        email email_log.email%type
+    );
+    cust r_cust;
+    
+    cust2 email_log%rowtype;
+begin
+    --Should print every record in the email_log table, lets see...
+    for i in 1 .. 6 loop
+        select first_name, last_name, email into cust from email_log where order_id = i;
+        cust.first_name := 'Blank';
+        print(cust.first_name || ' ' || cust.last_name || ' has an email of ' || cust.email);
+    end loop;
+    
+    --Second example of records
+    for i in 1 .. 6 loop
+        select * into cust2 from email_log where order_id = i;
+        print(cust2.first_name || ' ' || cust2.last_name);
+    end loop;        
+end;
+---------
+
+--Varrays
+declare
+    type t_arr is varray(6) of varchar2(55);
+    t_cust t_arr := t_arr();
+    idx pls_integer := 1;
+begin
+    --While loop example of post insertion and printing
+    while idx <= 6 loop
+        t_cust.extend;
+        select first_name into t_cust(idx) from email_log where order_id = idx;
+        idx := idx + 1;
+    end loop;
+    
+    idx := 1;
+    while idx <= 6 loop
+        print('Name: ' || t_cust(idx));
+        idx := idx + 1;
+    end loop;
+    
+    --Basic loop example of post insertion and printing
+    idx := 1;
+    loop 
+        exit when idx > 6;
+        select email into t_cust(idx) from email_log where order_id = idx;
+        idx := idx + 1;
+    end loop;
+    
+    idx := 1;
+    loop
+        exit when idx > 6;
+        print('Email: ' || t_cust(idx));
+        idx := idx + 1;
+    end loop;
+    
+    --For loop of post insertion and printing (note: You do not need an index)
+    for i in 1 .. 6 loop
+        select last_name into t_cust(i) from email_log where order_id = i;
+    end loop;
+    
+    for i in 1.. 6 loop
+        print('Last Name: ' || t_cust(i));
+    end loop;        
+end;
+----------------
+
+--Netsed Tables
+declare
+    type t_arr is table of varchar2(55);
+    t_cust t_arr := t_arr();
+    idx pls_integer := 1;
+begin
+    --While loop example of post insertion and printing
+    while idx <= 6 loop
+        t_cust.extend;
+        select first_name into t_cust(idx) from email_log where order_id = idx;
+        idx := idx + 1;
+    end loop;
+    
+    idx := 1;
+    while idx <= 6 loop
+        print('Name: ' || t_cust(idx));
+        idx := idx + 1;
+    end loop;
+    
+    --Basic loop example of post insertion and printing
+    idx := 1;
+    loop 
+        exit when idx > 6;
+        select email into t_cust(idx) from email_log where order_id = idx;
+        idx := idx + 1;
+    end loop;
+    
+    idx := 1;
+    loop
+        exit when idx > 6;
+        print('Email: ' || t_cust(idx));
+        idx := idx + 1;
+    end loop;
+    
+    --For loop of post insertion and printing (note: You do not need an index)
+    for i in 1 .. 6 loop
+        select last_name into t_cust(i) from email_log where order_id = i;
+    end loop;
+    
+    for i in 1.. 6 loop
+        print('Last Name: ' || t_cust(i));
+    end loop;        
+    
+    --Unique operations of nested tables that set them apart from varrays
+    t_cust.extend;
+    t_cust(7) := 'last name goes here';
+    t_cust.extend;
+    t_cust(8) := 'second last name goes here to';
+    t_cust.delete(8);
+    
+    print(t_cust(7));
+end;
+-----------------------
+
+--Associative Arrays
+declare
+    type t_arr is table of varchar2(55) index by pls_integer;
+    t_cust t_arr;
+    idx pls_integer := 1;
+begin
+    --While loop example of post insertion and printing
+    while idx <= 6 loop        
+        select first_name into t_cust(idx) from email_log where order_id = idx;
+        idx := idx + 1;
+    end loop;
+    
+    idx := 1;
+    while idx <= 6 loop
+        print('Name: ' || t_cust(idx));
+        idx := idx + 1;
+    end loop;
+    
+    --Basic loop example of post insertion and printing
+    idx := 1;
+    loop 
+        exit when idx > 6;
+        select email into t_cust(idx) from email_log where order_id = idx;
+        idx := idx + 1;
+    end loop;
+    
+    idx := 1;
+    loop
+        exit when idx > 6;
+        print('Email: ' || t_cust(idx));
+        idx := idx + 1;
+    end loop;
+    
+    --For loop of post insertion and printing (note: You do not need an index)
+    for i in 1 .. 6 loop
+        select last_name into t_cust(i) from email_log where order_id = i;
+    end loop;
+    
+    for i in 1.. 6 loop
+        print('Last Name: ' || t_cust(i));
+    end loop;        
+    
+    --Unique operations of nested tables that set them apart from varrays   
+    t_cust(7) := 'last name goes here';    
+    t_cust(8) := 'second last name goes here to';
+    t_cust.delete(8);
+    
+    print(t_cust(7));
+end;
+
+--Associative Arrays (Part 2)
+declare
+    type t_arr is table of varchar2(55) index by varchar2(55);
+    t_cust t_arr;
+    v_first_name email_log.first_name%type;
+    v_email email_log.email%type;
+    idx varchar2(55);
+begin
+
+    --populates our array
+    for i in 1 .. 6 loop
+        select first_name, email into v_first_name, v_email from email_log where order_id = i;
+        t_cust(v_email) := v_first_name;
+    end loop;
+    
+    --prints our array in reverse
+    idx := t_cust.first;
+    while idx is not null loop
+        print(t_cust(idx) || ' has an email of ' || idx);
+        idx := t_cust.next(idx);
+    end loop;
+end;
+------------------
+
+--Cursors
+declare
+    cursor c_cust is select * from email_log;
+    v_cust c_cust%rowtype;
+begin
+    --basic loop example
+    open c_cust;
+    loop
+        exit when c_cust%notfound;
+        fetch c_cust into v_cust;
+        print(v_cust.first_name || ' ' || v_cust.last_name);
+    end loop;
+    close c_cust;
+    
+    --while loop example
+    open c_cust;
+    fetch c_cust into v_cust;
+    while c_cust%found loop
+        print(v_cust.first_name || ' ' || v_cust.last_name || ' has an email of ' || v_cust.email);
+        fetch c_cust into v_cust;
+    end loop;
+    close c_cust;
+    
+    --For loop example
+    for i in c_cust loop
+        print('Name: ' || i.first_name || ' ' || i.last_name);
+    end loop;
+    
+    --alternate version of For loop, this version does not require you to declare a cursor
+    for i in (select * from email_log) loop
+        print('Email: ' || i.email);
+    end loop;
+end;
