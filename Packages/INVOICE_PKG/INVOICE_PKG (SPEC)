@@ -3,7 +3,7 @@ CREATE OR REPLACE package IMSI_CUSTOM.invoice_pkg is
         An associative array will be used to store data.
         It is indexed by pls_integer to allow for better performace
     */
-    type log_array is table of email_log%rowtype index by pls_integer;                
+    type log_array is table of email_log%rowtype index by pls_integer;                  
     
     /*
         This procedure calls other subprograms to popualte its local associative array. It then grabs each individual record and scans it individually via other 
@@ -59,6 +59,12 @@ CREATE OR REPLACE package IMSI_CUSTOM.invoice_pkg is
    /*
         When called, this procedure populates the email_log tabl with unique confirmation numbers for the customers
    */
-   procedure populate_with_conf_num;
+   procedure populate_with_conf_num;    
+   
+   /*
+        Applies the binary search algorithm to find the index of a value given a target to look for.
+        If the array does not have such value then it returns -1
+   */
+   function binary_search_my_pr(targetIn pls_integer) return pls_integer;
 end;
 /
