@@ -77,9 +77,10 @@ CREATE OR REPLACE package body IMSI_CUSTOM.invoice_pkg is
         
     --Sends an excel file via email to the current customer
     procedure send_email (v_record email_log%rowtype) is 
-    begin                              
+    begin      
+        --'/futl/tmp/AR_Lines_20200219.csv'                        
         IMSI_CUSTOM.IMSI_EMAIL ( 'Administrator','Administrator@imsready.com',v_record.first_name,v_record.email,null,NULL,NULL,NULL,
-            NULL,NULL,NULL,NULL,NULL,NULL,'subject','Invoice',NULL,'/futl/tmp/AR_Lines_20200219.csv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+            NULL,NULL,NULL,NULL,NULL,NULL,'subject','Invoice',NULL,null, null, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N' );
         
     exception
@@ -232,6 +233,37 @@ CREATE OR REPLACE package body IMSI_CUSTOM.invoice_pkg is
     when others then
         print('There was an unexpected error.');
         print(SQLCODE || ' => ' || SQLERRM);        
+    end;
+    
+    /*
+        Given a sorted array of size 9, it can find the elements index in logrithmic time
+    */
+    function binary_search_my_pr(targetIn pls_integer) return pls_integer is
+        type c_emps is varray(9) of pls_integer;
+        --Initializes a sorted varray with 9 elements
+        emp c_emps := c_emps(2, 34, 56, 78, 91, 97, 99, 104, 902);
+        target pls_integer := targetIn;
+        --Calculates the bounds from which it will begin its search
+        v_left pls_integer := 1;
+        v_right pls_integer := 9;
+        v_mid pls_integer := (v_left + v_right) / 2;         
+    begin        
+        while (v_left <= v_right) loop
+            --readjusts the value of mid for every iteration
+            v_mid := (v_left + v_right) / 2;  
+            --It the current cells value is greater than the target, then cut the search space in half by looking for the target in the cells to the left
+            if (emp(v_mid) > target) then
+                v_right := v_mid - 1;
+            --It the current cells value is less than the target, then cut the search space in half by looking for the target in the cells to the right
+            elsif (emp(v_mid) < target) then
+                v_left := v_mid + 1;
+            else
+            --assumes value has been found and returns the current index
+                return v_mid;
+            end if;
+        end loop;
+        --Returns a negative one if the target value is not in the stored array
+        return -1;
     end;
 end;
 /
