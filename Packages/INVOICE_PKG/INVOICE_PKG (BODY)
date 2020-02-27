@@ -77,9 +77,8 @@ CREATE OR REPLACE package body IMSI_CUSTOM.invoice_pkg is
         
     --Sends an excel file via email to the current customer
     procedure send_email (v_record email_log%rowtype) is 
-    begin      
-        --'/futl/tmp/AR_Lines_20200219.csv'                        
-        IMSI_CUSTOM.IMSI_EMAIL ( 'Administrator','Administrator@imsready.com',v_record.first_name,v_record.email,null,NULL,NULL,NULL,
+    begin                                     
+        EMAIL( 'Administrator','Administrator@imsready.com',v_record.first_name,v_record.email,null,NULL,NULL,NULL,
             NULL,NULL,NULL,NULL,NULL,NULL,'subject','Invoice',NULL,null, null, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N' );
         
