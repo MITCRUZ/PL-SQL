@@ -1,0 +1,60 @@
+CREATE OR REPLACE PACKAGE IMSI_CUSTOM.MSC_SCH_PKG
+IS
+   /*
+        Sets the maximum amount of tasks to add to 3
+   */
+   max_num   NUMBER := 3;
+
+   /*
+       Sends an email containing a text file
+   */
+   PROCEDURE send_to (email_In VARCHAR2);
+
+   /*
+       Generates a UTL_FILE that contains details about the current days to-do list
+   */
+   PROCEDURE generate_file;
+
+   /*
+        Checks to see if the current record has a status of PENDING or not, if it does then it returns true
+   */
+   FUNCTION status_is_pending (p_task msc_tbl%ROWTYPE)
+      RETURN BOOLEAN;
+
+   /*
+        Returns the number of tasks to complete for the day
+   */
+   FUNCTION total_tasks
+      RETURN INT;
+
+   /*
+       Returns the number of tasks completed
+   */
+   FUNCTION tasks_completed
+      RETURN INT;
+
+   /*
+        Generates and returns a unique 5 digit id number as a varchar2
+   */
+   FUNCTION unique_id_generator
+      RETURN VARCHAR2;
+
+   /*
+        Allows the user to input an assignment into their to-do list (msc_tbl table) by
+        inserting its priority,a brief description and the time they think it would take to finish said task
+   */
+   PROCEDURE insert_task (p_priority    msc_tbl.Priority%TYPE,
+                          p_desc        msc_tbl.Description%TYPE,
+                          p_time        msc_tbl.Approx_Time%TYPE);
+
+   /*
+        Clears the msc_tbl table
+   */
+   PROCEDURE clear_todo_list;
+
+   /*
+        Replaces the long dbms_output stmt
+   */
+   PROCEDURE PRINT (text VARCHAR2);
+END;
+/
