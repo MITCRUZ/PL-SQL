@@ -1,7 +1,7 @@
 The purpose of this package is to scan the table for customers who have not yet received their invoce, if they have not, then they 
 will receive an email with relevant purchase information, it also contains several useful testing subprograms for the developer.
 
-==========================================================Running Requirements==========================================================
+Running Requirements
 
 --CREATES THE TABLE NEEDED TO RUN THE SUBPROGRAMS IN THE INVOICE_PKG PACKAGE
 
@@ -24,12 +24,12 @@ BEGIN
     insert into email_log values (3, 'Tim', 'Tim', '789 old street drive', 0003335555, 'tim@xmail.com', 'PENDING');
 END;
 
---QUICK TEST TO MAKE SURE OUR TABLE POPULATED CORRECTLY
+--QUICK TEST TO MAKE SURE OUR TABLE POPULATED CORRECTLY: 
 select * from email_log;
 
---STATEMENT NEEDED TO RUN PACKAGE
+--STATEMENT NEEDED TO RUN PACKAGE: 
 execute invoice_pkg.scan_for_emails;
 
---Creates unique confirmation numbers for every customer
+--Creates unique confirmation numbers for every customer: 
 exec invoice_pkg.populate_with_conf_num;
 
