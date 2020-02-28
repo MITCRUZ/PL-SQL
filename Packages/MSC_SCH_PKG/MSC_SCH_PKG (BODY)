@@ -1,0 +1,236 @@
+CREATE OR REPLACE PACKAGE BODY IMSI_CUSTOM.MSC_SCH_PKG
+IS
+   --PENDING
+   PROCEDURE send_to (email_In VARCHAR2)
+   IS
+   BEGIN
+      --INSERT PROCEDURE THAT GENERATES UTL_FILE
+      IMSI_CUSTOM.IMSI_EMAIL ('Administrator',
+                              'Administrator@imsready.com',
+                              'ENTER RECEIVER NAME',
+                              email_In,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              'SUBJECT OF EMAIL',
+                              'BODY OF EMAIL',
+                              NULL,
+                              'MY_DIR' || '/' || 'DAILY_TASKS.TXT',     --fILENAMEB
+                              'IMSI_CUSTOM.MSC_SCH_PKG.generate_file',  --PROC. NAME
+                              0,                                        --NUM OF PARAMS
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              'N');
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   --PENDING
+   PROCEDURE generate_file
+   IS
+      f_handle   UTL_FILE.FILE_TYPE;
+   BEGIN
+      --NEEDS A DIRECTORY TO WORK
+      f_handle := UTL_FILE.FOPEN ('BFILE_DIR', 'DAILY_TASKS.TXT', 'W');
+
+      UTL_FILE.PUT_LINE (
+         f_handle,
+         '============================================================================================');
+      UTL_FILE.PUT_LINE (f_handle,
+                         'Date: ' || TO_CHAR (SYSDATE, 'MON DD, YYYY'));
+      UTL_FILE.PUT_LINE (f_handle, 'Tasks to finish today: ' || total_tasks);
+      UTL_FILE.PUT_LINE (f_handle, 'Tasks Completed: ' || tasks_completed);
+      UTL_FILE.PUT_LINE (
+         f_handle,
+         'Tasks Pending: ' || (total_tasks - tasks_completed));
+      UTL_FILE.PUT_LINE (
+         f_handle,
+         '============================================================================================');
+      UTL_FILE.PUT_LINE (
+         f_handle,
+         '                                                                                            ');
+      UTL_FILE.PUT_LINE (f_handle, 'Remaining Tasks...');
+      UTL_FILE.PUT_LINE (
+         f_handle,
+         '                                                                                            ');
+
+      --Prints the task number followed by the task description
+      --Uses cursor to loop through the MSC_TBL and grab the necessary information
+      FOR curr_tsk IN (SELECT * FROM msc_tbl)
+      LOOP
+         --Prints the details of the remaining tasks that have NOT been completed
+         IF (status_is_pending (curr_tsk))
+         THEN
+            UTL_FILE.PUT_LINE (f_handle,
+                               curr_tsk.Task || ': ' || curr_tsk.Description);
+         END IF;
+      END LOOP;
+
+      UTL_FILE.FCLOSE (f_handle);
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   FUNCTION status_is_pending (p_task msc_tbl%ROWTYPE)
+      RETURN BOOLEAN
+   IS
+   BEGIN
+      IF (p_task.Status = 'PENDING')
+      THEN
+         RETURN TRUE;
+      ELSE
+         RETURN FALSE;
+      END IF;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   FUNCTION total_tasks
+      RETURN INT
+   IS
+      result   INT := 0;
+   BEGIN
+      /*
+      FOR curr_tsk IN (SELECT * FROM msc_tbl)
+      LOOP
+         result := result + 1;
+      END LOOP;
+      */
+        SELECT COUNT(*) INTO RESULT FROM msc_tbl;
+      RETURN result;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   FUNCTION tasks_completed
+      RETURN INT
+   IS
+      result   INT := 0;
+   BEGIN
+      FOR curr_tsk IN (SELECT * FROM msc_tbl)
+      LOOP
+         IF (NOT status_is_pending (curr_tsk))
+         THEN
+            result := result + 1;
+         END IF;
+      END LOOP;
+      RETURN RESULT;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   FUNCTION unique_id_generator
+      RETURN VARCHAR2
+   IS
+      v_id   msc_tbl.Task_ID%TYPE;
+   BEGIN
+      FOR i IN 1 .. 5
+      LOOP
+         v_id := v_id || TRUNC (DBMS_RANDOM.VALUE (0, 9));
+      END LOOP;
+
+      RETURN v_id;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   PROCEDURE insert_task (p_priority    msc_tbl.Priority%TYPE,
+                          p_desc        msc_tbl.Description%TYPE,
+                          p_time        msc_tbl.Approx_Time%TYPE)
+   IS
+   BEGIN
+      --The table takes in 6 arguments
+      INSERT INTO msc_tbl (Task,
+                           Task_ID,
+                           Priority,
+                           Description,
+                           Approx_Time)
+           VALUES (task_num_generator.NEXTVAL,
+                   unique_id_generator,
+                   p_priority,
+                   p_desc,
+                   p_time);
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   PROCEDURE clear_todo_list
+   IS
+   BEGIN
+      FOR curr_tsk IN (SELECT * FROM msc_tbl)
+      LOOP
+         --If the user has not yet reached the max number in tasks then add blank records in order to reset the sequence to 1
+         IF (curr_tsk.Task < max_num)
+         THEN
+            FOR i IN curr_tsk.Task .. (max_num)
+            LOOP
+               insert_task ('N/A', 'N/A', 'N/A');
+            END LOOP;
+         END IF;
+         --insert_task ('N/A', 'N/A', 'N/A');
+      END LOOP;
+
+      DELETE FROM msc_tbl;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   PROCEDURE PRINT (text VARCHAR2)
+   IS
+   BEGIN
+      DBMS_OUTPUT.put_line (text);
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+END;
+/
