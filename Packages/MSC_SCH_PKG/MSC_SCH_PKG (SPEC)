@@ -1,9 +1,10 @@
+/* Formatted on 2/28/2020 11:24:32 AM (QP5 v5.256.13226.35510) */
 CREATE OR REPLACE PACKAGE IMSI_CUSTOM.MSC_SCH_PKG
 IS
    /*
-        Sets the maximum amount of tasks to add to 3
+        Sets the idx for the Task attribute (Primary Key)
    */
-   max_num   NUMBER := 3;
+   idx   NUMBER := 0;
 
    /*
        Sends an email containing a text file
@@ -56,5 +57,52 @@ IS
         Replaces the long dbms_output stmt
    */
    PROCEDURE PRINT (text VARCHAR2);
+
+   /*
+        Allows the user to delete a certain task from their list.
+  */
+   PROCEDURE delete_task (p_target NUMBER);
+
+   /*
+         Adjusts the Task numbers after deleting a task from the list.
+  */
+   PROCEDURE adjust_task_numbers (p_tsk_num NUMBER);
+
+   /*
+        Returns the index of the last task in the to-do list
+  */
+   FUNCTION find_last_task_num
+      RETURN NUMBER;
+
+   /*
+        Allows a user to set the status of a task from PENDING to COMPLETE
+   */
+   PROCEDURE completed_task (p_task_num NUMBER);
+
+   /*
+        Sets all of the tasks status to PENDING
+   */
+   PROCEDURE set_all_to_pending;
+
+   /*
+        Sets all of the tasks status to COMPLETE
+   */
+   PROCEDURE set_all_to_complete;
+
+   /*
+        Searches for a specific task and sends it to someone via email
+   */
+   PROCEDURE search_for_task_send_to (p_task_num NUMBER, p_email VARCHAR2);
+
+   /*
+        Generates a txt file which contains detailed information about a specific task
+   */
+   PROCEDURE generate_specific_task;
+
+   /*
+        Returns the appropriate task given a task number
+   */
+   FUNCTION find_record (p_task_num NUMBER)
+      RETURN msc_tbl%ROWTYPE;
 END;
 /
