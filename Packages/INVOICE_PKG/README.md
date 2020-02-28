@@ -1,3 +1,6 @@
+The purpose of this package is to scan the table for customers who have not yet received their invoce, if they have not, then they 
+will receive an email with relevant purchase information, it also contains several useful testing subprograms for the developer.
+
 ===========================================================Running Requirements============================================================================
 
 --CREATES THE TABLE NEEDED TO RUN THE SUBPROGRAMS IN THE INVOICE_PKG PACKAGE
