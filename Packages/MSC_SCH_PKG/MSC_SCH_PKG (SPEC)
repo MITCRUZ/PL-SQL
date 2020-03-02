@@ -1,5 +1,5 @@
-/* Formatted on 2/28/2020 11:24:32 AM (QP5 v5.256.13226.35510) */
-CREATE OR REPLACE PACKAGE IMSI_CUSTOM.MSC_SCH_PKG
+/* Formatted on 3/2/2020 3:36:54 PM (QP5 v5.256.13226.35510) */
+CREATE OR REPLACE PACKAGE MSC_SCH_PKG
 IS
    /*
         Sets the idx for the Task attribute (Primary Key)
@@ -9,7 +9,7 @@ IS
    /*
        Sends an email containing a text file
    */
-   PROCEDURE send_to (email_In VARCHAR2);
+   PROCEDURE send_to;
 
    /*
        Generates a UTL_FILE that contains details about the current days to-do list
@@ -52,6 +52,11 @@ IS
         Clears the msc_tbl table
    */
    PROCEDURE clear_todo_list;
+
+   /*
+        Clears the msc_tbl_ordered table
+   */
+   PROCEDURE clear_todo_list2;
 
    /*
         Replaces the long dbms_output stmt
@@ -104,5 +109,25 @@ IS
    */
    FUNCTION find_record (p_task_num NUMBER)
       RETURN msc_tbl%ROWTYPE;
+
+   /*
+        Resets the index of the Task atrribute to zero if all indexes have been removed
+   */
+   PROCEDURE reset_table_state;
+
+   /*
+        A copy of the msc_tbl but this table orders the tasks based on priority
+   */
+   PROCEDURE order_table_on_priority;
+
+   /*
+        Allows a user to delete a task from the ordered to-do list
+   */
+   PROCEDURE delete_task2 (p_target NUMBER);
+
+   /*
+        This procedure clears the data from the tables msc_tbl and msc_tbl_ordered at 11:59 pm
+   */
+   PROCEDURE reset_tables;
 END;
 /
