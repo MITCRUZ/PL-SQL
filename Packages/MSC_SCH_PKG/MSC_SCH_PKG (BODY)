@@ -1,15 +1,14 @@
-/* Formatted on 2/28/2020 10:48:18 AM (QP5 v5.256.13226.35510) */
+/* Formatted on 3/2/2020 3:53:19 PM (QP5 v5.256.13226.35510) */
 CREATE OR REPLACE PACKAGE BODY IMSI_CUSTOM.MSC_SCH_PKG
 IS
-   --PENDING
-   PROCEDURE send_to (email_In VARCHAR2)
+   PROCEDURE send_to      -- (P_ERR_BUF OUT VARCHAR2, P_MSG_BUFF OUT VARCHAR2)
    IS
    BEGIN
       --INSERT PROCEDURE THAT GENERATES UTL_FILE
       IMSI_CUSTOM.IMSI_EMAIL ('Administrator',
                               'Administrator@imsready.com',
                               'Mitchel Santillan Cruz',
-                              email_In,
+                              'mitchel_cruz@steris.com',
                               NULL,
                               NULL,
                               NULL,
@@ -54,17 +53,21 @@ IS
                               NULL,
                               NULL,
                               'N');
+      --After the email is sent, the two tables should be cleared
+      reset_tables;
    EXCEPTION
       WHEN OTHERS
       THEN
          PRINT (SQLCODE || ' => ' || SQLERRM);
    END;
-   
+
    PROCEDURE generate_file
    IS
-      f_handle   UTL_FILE.FILE_TYPE;
+      f_handle        UTL_FILE.FILE_TYPE;
+      tasks_pending   NUMBER := total_tasks - tasks_completed;
    BEGIN
-      --NEEDS A DIRECTORY TO WORK
+      --Creates a second table which is ordered based on Priority set by user
+      order_table_on_priority;
       f_handle := UTL_FILE.FOPEN ('BFILE_DIR', 'DAILY_TASKS.TXT', 'W');
 
       UTL_FILE.PUT_LINE (
@@ -74,32 +77,132 @@ IS
                          'Date: ' || TO_CHAR (SYSDATE, 'MON DD, YYYY'));
       UTL_FILE.PUT_LINE (f_handle, 'Tasks to finish today: ' || total_tasks);
       UTL_FILE.PUT_LINE (f_handle, 'Tasks Completed: ' || tasks_completed);
+      UTL_FILE.PUT_LINE (f_handle, 'Tasks Pending: ' || tasks_pending);
       UTL_FILE.PUT_LINE (
          f_handle,
-         'Tasks Pending: ' || (total_tasks - tasks_completed));
+         '                                                                                            ');
+
+      --TEXT IMAGE--
+      UTL_FILE.PUT_LINE (f_handle, '_______________**');
+      UTL_FILE.PUT_LINE (f_handle, '______________****');
+      UTL_FILE.PUT_LINE (f_handle, '_____________**_****');
+      UTL_FILE.PUT_LINE (f_handle, '____________**____***');
+      UTL_FILE.PUT_LINE (f_handle, '___________***______**');
+      UTL_FILE.PUT_LINE (f_handle, '___________***_______**');
+      UTL_FILE.PUT_LINE (f_handle, '__________****________**');
+      UTL_FILE.PUT_LINE (f_handle, '__________*_**_________**');
+      UTL_FILE.PUT_LINE (f_handle, '__________*__**_________**____**');
+      UTL_FILE.PUT_LINE (f_handle, '__________*__**__________*******');
+      UTL_FILE.PUT_LINE (f_handle, '_________**__***______******___*');
+      UTL_FILE.PUT_LINE (f_handle, '_________**___**__******__**');
+      UTL_FILE.PUT_LINE (f_handle, '_______**_*____****________**');
+      UTL_FILE.PUT_LINE (f_handle, '______**__**___**__________**');
+      UTL_FILE.PUT_LINE (f_handle, '_____**____**___**__________**');
+      UTL_FILE.PUT_LINE (f_handle, '___**_______**___**_________**');
+      UTL_FILE.PUT_LINE (f_handle, '___*************__**_________*');
+      UTL_FILE.PUT_LINE (f_handle, '_*****************_**________**');
+      UTL_FILE.PUT_LINE (f_handle, '**__******____*********______**');
+      UTL_FILE.PUT_LINE (f_handle, '*****___*______*___*****_____**');
+      UTL_FILE.PUT_LINE (f_handle, '________********______*****_**');
+      UTL_FILE.PUT_LINE (f_handle, '______***********________****');
+      UTL_FILE.PUT_LINE (f_handle, '______************');
+      UTL_FILE.PUT_LINE (f_handle, '______*__**_******');
+      UTL_FILE.PUT_LINE (f_handle, '_____**______*___*');
+      UTL_FILE.PUT_LINE (f_handle, '_____**_____**___*');
+      UTL_FILE.PUT_LINE (f_handle, '_____*______**___*');
+      UTL_FILE.PUT_LINE (f_handle, '____**______**___**');
+      UTL_FILE.PUT_LINE (f_handle, '____**______**___**');
+      UTL_FILE.PUT_LINE (f_handle, '___****************');
+      UTL_FILE.PUT_LINE (f_handle, '__*********_********');
+      UTL_FILE.PUT_LINE (f_handle, '__**________***____**');
+      UTL_FILE.PUT_LINE (f_handle, '____****************');
+
+      UTL_FILE.PUT_LINE (
+         f_handle,
+         '                                                                                            ');
       UTL_FILE.PUT_LINE (
          f_handle,
          '============================================================================================');
       UTL_FILE.PUT_LINE (
          f_handle,
          '                                                                                            ');
-      UTL_FILE.PUT_LINE (f_handle, 'Remaining Tasks...');
+
+
+      UTL_FILE.PUT_LINE (f_handle, 'Remaining Tasks ordered by Priority...');
+      UTL_FILE.PUT_LINE (
+         f_handle,
+         '                                                                                            ');
+
+      --Prints the task Priority followed by the task description
+      IF (tasks_pending = 0)
+      THEN
+         UTL_FILE.PUT_LINE (
+            f_handle,
+            '        There are no tasks that need to be completed today!');
+         UTL_FILE.PUT_LINE (
+            f_handle,
+            '                                                                                            ');
+      ELSE
+         --Uses cursor to loop through the MSC_TBL_ORDERED and grabs the necessary information
+         FOR curr_tsk2 IN (SELECT * FROM msc_tbl_ordered)
+         LOOP
+            --Prints the details of the remaining tasks that have NOT been completed
+            IF (status_is_pending (curr_tsk2))
+            THEN
+               --Adds more spaces for visual purposes
+               IF (curr_tsk2.Priority = 'Low')
+               THEN
+                  UTL_FILE.PUT_LINE (
+                     f_handle,
+                     curr_tsk2.Priority || ':    ' || curr_tsk2.Description);
+               ELSIF (curr_tsk2.Priority = 'High')
+               THEN
+                  UTL_FILE.PUT_LINE (
+                     f_handle,
+                     curr_tsk2.Priority || ':   ' || curr_tsk2.Description);
+               ELSIF (curr_tsk2.Priority = 'Medium')
+               THEN
+                  UTL_FILE.PUT_LINE (
+                     f_handle,
+                     curr_tsk2.Priority || ': ' || curr_tsk2.Description);
+               END IF;
+            END IF;
+         END LOOP;
+      END IF;
+
+      UTL_FILE.PUT_LINE (f_handle, 'Tasks Completed...');
       UTL_FILE.PUT_LINE (
          f_handle,
          '                                                                                            ');
 
       --Prints the task number followed by the task description
-      --Uses cursor to loop through the MSC_TBL and grab the necessary information
-      FOR curr_tsk IN (SELECT * FROM msc_tbl)
-      LOOP
-         --Prints the details of the remaining tasks that have NOT been completed
-         IF (status_is_pending (curr_tsk))
-         THEN
-            UTL_FILE.PUT_LINE (f_handle,
-                               curr_tsk.Task || ': ' || curr_tsk.Description);
-         END IF;
-      END LOOP;
-            
+      IF (tasks_completed = 0)
+      THEN
+         UTL_FILE.PUT_LINE (f_handle,
+                            '        No tasks have been completed today.');
+      ELSE
+         --Uses cursor to loop through the MSC_TBL and grabs the necessary information
+         FOR curr_tsk IN (SELECT * FROM msc_tbl)
+         LOOP
+            --Prints the details of the remaining tasks that have NOT been completed
+            IF (NOT status_is_pending (curr_tsk))
+            THEN
+               --Used only for visual purposes
+               IF (curr_tsk.Task < 10)
+               THEN
+                  UTL_FILE.PUT_LINE (
+                     f_handle,
+                     curr_tsk.Task || ': ' || curr_tsk.Description);
+               ELSIF (curr_tsk.Task >= 10)
+               THEN
+                  UTL_FILE.PUT_LINE (
+                     f_handle,
+                     curr_tsk.Task || ':  ' || curr_tsk.Description);
+               END IF;
+            END IF;
+         END LOOP;
+      END IF;
+
       UTL_FILE.FCLOSE (f_handle);
    EXCEPTION
       WHEN OTHERS
@@ -188,24 +291,43 @@ IS
          PRINT (SQLCODE || ' => ' || SQLERRM);
    END;
 
+   --USER
    PROCEDURE insert_task (p_priority    msc_tbl.Priority%TYPE,
                           p_desc        msc_tbl.Description%TYPE,
                           p_time        msc_tbl.Approx_Time%TYPE)
    IS
+      v_rank   msc_tbl.RANK%TYPE;
    BEGIN
       --The table takes in 6 arguments
       idx := idx + 1;
+
+      IF (p_priority = 'High')
+      THEN
+         v_rank := 'A';
+      ELSIF (p_priority = 'Medium')
+      THEN
+         v_rank := 'B';
+      ELSIF (p_priority = 'Low')
+      THEN
+         v_rank := 'C';
+      ELSE
+         v_rank := 'D';
+      END IF;
 
       INSERT INTO msc_tbl (Task,
                            Task_ID,
                            Priority,
                            Description,
-                           Approx_Time)
+                           Approx_Time,
+                           RANK)
            VALUES (idx,
                    unique_id_generator,
                    p_priority,
                    p_desc,
-                   p_time);
+                   p_time,
+                   v_rank);
+
+      COMMIT;
    EXCEPTION
       WHEN OTHERS
       THEN
@@ -219,6 +341,22 @@ IS
       idx := 0;
 
       DELETE FROM msc_tbl;
+
+      COMMIT;
+      --Makes sure to adjust the indexes if the table has been completely wiped clean
+      reset_table_state;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   PROCEDURE clear_todo_list2
+   IS
+   BEGIN
+      DELETE FROM msc_tbl_ordered;
+
+      COMMIT;
    EXCEPTION
       WHEN OTHERS
       THEN
@@ -235,6 +373,7 @@ IS
          PRINT (SQLCODE || ' => ' || SQLERRM);
    END;
 
+   --USER
    PROCEDURE delete_task (p_target NUMBER)
    IS
       v_param   NUMBER;
@@ -251,6 +390,8 @@ IS
             DELETE FROM msc_tbl
                   WHERE Task = curr_tsk.Task;
 
+            COMMIT;
+
             --Iterate through the remaining records in order to adjust the task numbers
             FOR i IN v_param .. find_last_task_num
             LOOP
@@ -258,6 +399,35 @@ IS
             END LOOP;
          END IF;
       END LOOP;
+
+      --Makes sure to adjust the indexes if the table has been completely wiped clean
+      reset_table_state;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   --USER
+   PROCEDURE delete_task2 (p_target NUMBER)
+   IS
+      v_param   NUMBER;
+   BEGIN
+      --Examine each cell one by one and compare it to a target value
+      FOR curr_tsk IN (SELECT * FROM msc_tbl)
+      LOOP
+         --When found, delete that record
+         IF (curr_tsk.Task = p_target)
+         THEN
+            DELETE FROM msc_tbl_ordered
+                  WHERE Task = curr_tsk.Task;
+
+            COMMIT;
+         END IF;
+      END LOOP;
+
+      --Makes sure to adjust the indexes if the table has been completely wiped clean
+      reset_table_state;
    EXCEPTION
       WHEN OTHERS
       THEN
@@ -303,6 +473,7 @@ IS
          PRINT (SQLCODE || ' => ' || SQLERRM);
    END;
 
+   --USER
    PROCEDURE completed_task (p_task_num NUMBER)
    IS
    BEGIN
@@ -329,7 +500,7 @@ IS
       THEN
          PRINT (SQLCODE || ' => ' || SQLERRM);
    END;
-   
+
    PROCEDURE set_all_to_complete
    IS
    BEGIN
@@ -343,132 +514,201 @@ IS
       WHEN OTHERS
       THEN
          PRINT (SQLCODE || ' => ' || SQLERRM);
-   END;   
-   
-   procedure search_for_task_send_to(p_task_num number, p_email varchar2) is   
-   begin                
-        IMSI_CUSTOM.IMSI_EMAIL ('Administrator',
-                              'Administrator@imsready.com',
-                              'Mitchel Santillan Cruz',
-                              p_email,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              'SUBJECT OF EMAIL',
-                              'BODY OF EMAIL',
-                              NULL,
-                              'BFILE_DIR' || '/' || 'SPECIFIC_TASK.TXT', --fILENAMEB
-                              'IMSI_CUSTOM.MSC_SCH_PKG.generate_specific_task', --PROC. NAME
-                              0,                               --NUM OF PARAMS
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              'N');
-   EXCEPTION
-      WHEN OTHERS
-      THEN
-         PRINT (SQLCODE || ' => ' || SQLERRM);                              
-   end;
-   
-   PROCEDURE generate_specific_task
+   END;
+
+   --USER
+   PROCEDURE search_for_task_send_to (p_task_num NUMBER, p_email VARCHAR2)
    IS
-      f_handle   UTL_FILE.FILE_TYPE;
-      v_record msc_tbl%rowtype;
-   BEGIN      
-       v_record := find_record(2);
-        f_handle := UTL_FILE.FOPEN('BFILE_DIR', 'SPECIFIC_TASK.TXT', 'W');
-        
-        UTL_FILE.PUT_LINE(f_handle, 'Task #: ' || v_record.Task);
-        UTL_FILE.PUT_LINE(f_handle, 'Task ID #: ' || v_record.Task_ID);
-        UTL_FILE.PUT_LINE(f_handle, 'Priority: ' || v_record.Priority);
-        UTL_FILE.PUT_LINE(f_handle, 'Description: ' || v_record.Description);
-        UTL_FILE.PUT_LINE(f_handle, 'Approx Time: ' || v_record.Approx_Time);
-        UTL_FILE.PUT_LINE(f_handle, 'Status: ' || v_record.Status);
-        UTL_FILE.PUT_LINE (
-         f_handle,
-         '                                                                                            ');
-        
-        --TEXT IMAGE--
-        UTL_FILE.PUT_LINE(f_handle, '______________¶¶¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '_____________¶¶_¶¶¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '____________¶¶____¶¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '___________¶¶¶______¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '___________¶¶¶_______¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '__________¶¶¶¶________¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '__________¶_¶¶_________¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '__________¶__¶¶_________¶¶____¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '__________¶__¶¶__________¶¶¶¶¶¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '_________¶¶__¶¶¶______¶¶¶¶¶¶___¶');
-        UTL_FILE.PUT_LINE(f_handle, '_________¶¶___¶¶__¶¶¶¶¶¶__¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '_______¶¶_¶____¶¶¶¶________¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '______¶¶__¶¶___¶¶__________¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '_____¶¶____¶¶___¶¶__________¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '___¶¶_______¶¶___¶¶_________¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '___¶¶¶¶¶¶¶¶¶¶¶¶¶__¶¶_________¶');
-        UTL_FILE.PUT_LINE(f_handle, '_¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶_¶¶________¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '¶¶__¶¶¶¶¶¶____¶¶¶¶¶¶¶¶¶______¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '¶¶¶¶¶___¶______¶___¶¶¶¶¶_____¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '________¶¶¶¶¶¶¶¶______¶¶¶¶¶_¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '______¶¶¶¶¶¶¶¶¶¶¶________¶¶¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '______¶¶¶¶¶¶¶¶¶¶¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '______¶__¶¶_¶¶¶¶¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '_____¶¶______¶___¶');
-        UTL_FILE.PUT_LINE(f_handle, '_____¶¶_____¶¶___¶');
-        UTL_FILE.PUT_LINE(f_handle, '_____¶______¶¶___¶');
-        UTL_FILE.PUT_LINE(f_handle, '____¶¶______¶¶___¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '____¶¶______¶¶___¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '___¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '__¶¶¶¶¶¶¶¶¶_¶¶¶¶¶¶¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '__¶¶________¶¶¶____¶¶');
-        UTL_FILE.PUT_LINE(f_handle, '____¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶');   
-         
-        UTL_FILE.FCLOSE (f_handle);
+   BEGIN
+      IMSI_CUSTOM.IMSI_EMAIL (
+         'Administrator',
+         'Administrator@imsready.com',
+         'Mitchel Santillan Cruz',
+         p_email,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         'SUBJECT OF EMAIL',
+         'BODY OF EMAIL',
+         NULL,
+         'BFILE_DIR' || '/' || 'SPECIFIC_TASK.TXT',                --fILENAMEB
+         'IMSI_CUSTOM.MSC_SCH_PKG.generate_specific_task',        --PROC. NAME
+         0,                                                    --NUM OF PARAMS
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         'N');
    EXCEPTION
       WHEN OTHERS
       THEN
          PRINT (SQLCODE || ' => ' || SQLERRM);
-   END;         
-   
-   function find_record(p_task_num number) return msc_tbl%rowtype is
-   v_record msc_tbl%rowtype;
-   begin
-        select * into v_record from msc_tbl where Task = p_task_num; 
-        return v_record;
+   END;
+
+   PROCEDURE generate_specific_task
+   IS
+      f_handle   UTL_FILE.FILE_TYPE;
+      v_record   msc_tbl%ROWTYPE;
+   BEGIN
+      v_record := find_record (2);
+      f_handle := UTL_FILE.FOPEN ('BFILE_DIR', 'SPECIFIC_TASK.TXT', 'W');
+
+      UTL_FILE.PUT_LINE (f_handle, 'Task #: ' || v_record.Task);
+      UTL_FILE.PUT_LINE (f_handle, 'Task ID #: ' || v_record.Task_ID);
+      UTL_FILE.PUT_LINE (f_handle, 'Priority: ' || v_record.Priority);
+      UTL_FILE.PUT_LINE (f_handle, 'Description: ' || v_record.Description);
+      UTL_FILE.PUT_LINE (f_handle, 'Approx Time: ' || v_record.Approx_Time);
+      UTL_FILE.PUT_LINE (f_handle, 'Status: ' || v_record.Status);
+      UTL_FILE.PUT_LINE (
+         f_handle,
+         '                                                                                            ');
+
+      --TEXT IMAGE--
+      UTL_FILE.PUT_LINE (f_handle, '_______________**');
+      UTL_FILE.PUT_LINE (f_handle, '______________****');
+      UTL_FILE.PUT_LINE (f_handle, '_____________**_****');
+      UTL_FILE.PUT_LINE (f_handle, '____________**____***');
+      UTL_FILE.PUT_LINE (f_handle, '___________***______**');
+      UTL_FILE.PUT_LINE (f_handle, '___________***_______**');
+      UTL_FILE.PUT_LINE (f_handle, '__________****________**');
+      UTL_FILE.PUT_LINE (f_handle, '__________*_**_________**');
+      UTL_FILE.PUT_LINE (f_handle, '__________*__**_________**____**');
+      UTL_FILE.PUT_LINE (f_handle, '__________*__**__________*******');
+      UTL_FILE.PUT_LINE (f_handle, '_________**__***______******___*');
+      UTL_FILE.PUT_LINE (f_handle, '_________**___**__******__**');
+      UTL_FILE.PUT_LINE (f_handle, '_______**_*____****________**');
+      UTL_FILE.PUT_LINE (f_handle, '______**__**___**__________**');
+      UTL_FILE.PUT_LINE (f_handle, '_____**____**___**__________**');
+      UTL_FILE.PUT_LINE (f_handle, '___**_______**___**_________**');
+      UTL_FILE.PUT_LINE (f_handle, '___*************__**_________*');
+      UTL_FILE.PUT_LINE (f_handle, '_*****************_**________**');
+      UTL_FILE.PUT_LINE (f_handle, '**__******____*********______**');
+      UTL_FILE.PUT_LINE (f_handle, '*****___*______*___*****_____**');
+      UTL_FILE.PUT_LINE (f_handle, '________********______*****_**');
+      UTL_FILE.PUT_LINE (f_handle, '______***********________****');
+      UTL_FILE.PUT_LINE (f_handle, '______************');
+      UTL_FILE.PUT_LINE (f_handle, '______*__**_******');
+      UTL_FILE.PUT_LINE (f_handle, '_____**______*___*');
+      UTL_FILE.PUT_LINE (f_handle, '_____**_____**___*');
+      UTL_FILE.PUT_LINE (f_handle, '_____*______**___*');
+      UTL_FILE.PUT_LINE (f_handle, '____**______**___**');
+      UTL_FILE.PUT_LINE (f_handle, '____**______**___**');
+      UTL_FILE.PUT_LINE (f_handle, '___****************');
+      UTL_FILE.PUT_LINE (f_handle, '__*********_********');
+      UTL_FILE.PUT_LINE (f_handle, '__**________***____**');
+      UTL_FILE.PUT_LINE (f_handle, '____****************');
+
+      UTL_FILE.FCLOSE (f_handle);
    EXCEPTION
       WHEN OTHERS
       THEN
-         PRINT (SQLCODE || ' => ' || SQLERRM);          
-   end;
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   FUNCTION find_record (p_task_num NUMBER)
+      RETURN msc_tbl%ROWTYPE
+   IS
+      v_record   msc_tbl%ROWTYPE;
+   BEGIN
+      SELECT *
+        INTO v_record
+        FROM msc_tbl
+       WHERE Task = p_task_num;
+
+      RETURN v_record;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   PROCEDURE reset_table_state
+   IS
+   BEGIN
+      IF (total_tasks = 0)
+      THEN
+         idx := 0;
+      END IF;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   PROCEDURE order_table_on_priority
+   IS
+   --r_record msc_tbl%rowtype;
+   BEGIN
+      DELETE FROM msc_tbl_ordered;
+
+      --select * into r_record from msc_tbl order by Priority;
+      FOR i IN (  SELECT *
+                    FROM msc_tbl
+                ORDER BY RANK)
+      LOOP
+         INSERT INTO msc_tbl_ordered
+              VALUES (i.Task,
+                      i.Task_ID,
+                      i.Priority,
+                      i.Description,
+                      i.Approx_Time,
+                      i.Status,
+                      i.RANK);
+      END LOOP;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   PROCEDURE reset_tables
+   IS
+      v_time   DATE := SYSDATE;
+      v_char   VARCHAR2 (15) := TO_CHAR (v_time, 'HH:MI');
+   BEGIN
+      /*
+      if (v_char = '11:59') then
+          clear_todo_list;
+          clear_todo_list2;
+      end if;
+      */
+
+      clear_todo_list;
+      clear_todo_list2;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
 END;
 /
