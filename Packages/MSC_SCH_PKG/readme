@@ -17,6 +17,17 @@ Remaining Tasks...
 3: Task 3 description
 etc
 
+/* Formatted on 3/2/2020 9:45:06 AM (QP5 v5.256.13226.35510) */
+CREATE TABLE msc_tbl
+(
+   Task          NUMBER PRIMARY KEY,
+   Task_ID       VARCHAR2 (5) NOT NULL,
+   Priority      VARCHAR2 (15) NOT NULL,
+   Description   VARCHAR2 (100) DEFAULT 'N/A/',
+   Approx_Time   VARCHAR2 (55) DEFAULT 'N/A/',
+   Status        VARCHAR2 (15) DEFAULT 'PENDING'
+);
+
 --Displays table information where the tasks are stored
 Column Name    ID    Null?  Data Type                 Default
 TASK	         1			N	    NUMBER		  								
