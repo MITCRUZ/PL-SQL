@@ -1,6 +1,6 @@
 select * from msc_tbl;
 /
-exec msc_sch_pkg.insert_task('Medium', 'desc 3', '1 hr');
+exec msc_sch_pkg.insert_task('Medium', 'desc...', '1 hr');
 /
 exec msc_sch_pkg.delete_task(8);
 /
