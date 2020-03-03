@@ -1,7 +1,8 @@
-/* Formatted on 3/2/2020 3:53:19 PM (QP5 v5.256.13226.35510) */
+/* Formatted on 3/3/2020 7:32:39 AM (QP5 v5.256.13226.35510) */
 CREATE OR REPLACE PACKAGE BODY IMSI_CUSTOM.MSC_SCH_PKG
 IS
-   PROCEDURE send_to      -- (P_ERR_BUF OUT VARCHAR2, P_MSG_BUFF OUT VARCHAR2)
+   --*******************************************MAIN PROCEDURE TO RUN**************************************************--
+   PROCEDURE send_to (P_ERR_BUF OUT VARCHAR2, P_MSG_BUFF OUT VARCHAR2)
    IS
    BEGIN
       --INSERT PROCEDURE THAT GENERATES UTL_FILE
@@ -60,6 +61,164 @@ IS
       THEN
          PRINT (SQLCODE || ' => ' || SQLERRM);
    END;
+
+   --**********************************************************************************************************************************--
+
+
+
+   --*********************************************************USER METHODS*************************************************************--
+
+
+   PROCEDURE insert_task (p_priority    msc_tbl.Priority%TYPE,
+                          p_desc        msc_tbl.Description%TYPE,
+                          p_time        msc_tbl.Approx_Time%TYPE)
+   IS
+      v_rank   msc_tbl.RANK%TYPE;
+   BEGIN
+      --The table takes in 6 arguments
+      idx := idx + 1;
+
+      IF (p_priority = 'High')
+      THEN
+         v_rank := 'A';
+      ELSIF (p_priority = 'Medium')
+      THEN
+         v_rank := 'B';
+      ELSIF (p_priority = 'Low')
+      THEN
+         v_rank := 'C';
+      ELSE
+         v_rank := 'D';
+      END IF;
+
+      INSERT INTO msc_tbl (Task,
+                           Task_ID,
+                           Priority,
+                           Description,
+                           Approx_Time,
+                           RANK)
+           VALUES (idx,
+                   unique_id_generator,
+                   p_priority,
+                   p_desc,
+                   p_time,
+                   v_rank);
+   --commit;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   PROCEDURE delete_task (p_target NUMBER)
+   IS
+      v_param   NUMBER;
+   BEGIN
+      --Examine each cell one by one and compare it to a target value
+      FOR curr_tsk IN (SELECT * FROM msc_tbl)
+      LOOP
+         --When found, delete that record
+         IF (curr_tsk.Task = p_target)
+         THEN
+            --Grabs the Task number of the record that comes after the one you have deleted
+            v_param := curr_tsk.Task + 1;
+
+            DELETE FROM msc_tbl
+                  WHERE Task = curr_tsk.Task;
+
+            --commit;
+
+            --Iterate through the remaining records in order to adjust the task numbers
+            FOR i IN v_param .. find_last_task_num
+            LOOP
+               adjust_task_numbers (i);
+            END LOOP;
+         END IF;
+      END LOOP;
+
+      --Makes sure to adjust the indexes if the table has been completely wiped clean
+      reset_table_state;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   PROCEDURE search_for_task_send_to (p_task_num NUMBER, p_email VARCHAR2)
+   IS
+   BEGIN
+      IMSI_CUSTOM.IMSI_EMAIL (
+         'Administrator',
+         'Administrator@imsready.com',
+         'Mitchel Santillan Cruz',
+         p_email,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         'SUBJECT OF EMAIL',
+         'BODY OF EMAIL',
+         NULL,
+         'BFILE_DIR' || '/' || 'SPECIFIC_TASK.TXT',                --fILENAMEB
+         'IMSI_CUSTOM.MSC_SCH_PKG.generate_specific_task',        --PROC. NAME
+         0,                                                    --NUM OF PARAMS
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         'N');
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   PROCEDURE completed_task (p_task_num NUMBER)
+   IS
+   BEGIN
+      UPDATE msc_tbl
+         SET Status = 'COMPLETE'
+       WHERE Task = p_task_num;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   --**********************************************************************************************************************************--
+
+
+
+   --**********************************************************FUNCTIONAL METHODS******************************************************--
 
    PROCEDURE generate_file
    IS
@@ -170,6 +329,12 @@ IS
          END LOOP;
       END IF;
 
+      UTL_FILE.PUT_LINE (
+         f_handle,
+         '                                                                                            ');
+      UTL_FILE.PUT_LINE (
+         f_handle,
+         '                                                                                            ');
       UTL_FILE.PUT_LINE (f_handle, 'Tasks Completed...');
       UTL_FILE.PUT_LINE (
          f_handle,
@@ -226,18 +391,11 @@ IS
          PRINT (SQLCODE || ' => ' || SQLERRM);
    END;
 
-   --Modified for performance
    FUNCTION total_tasks
       RETURN INT
    IS
       result   INT := 0;
    BEGIN
-      /*
-      FOR curr_tsk IN (SELECT * FROM msc_tbl)
-      LOOP
-         result := result + 1;
-      END LOOP;
-      */
       SELECT COUNT (*) INTO RESULT FROM msc_tbl;
 
       RETURN result;
@@ -247,21 +405,11 @@ IS
          PRINT (SQLCODE || ' => ' || SQLERRM);
    END;
 
-   --Modified for performance
    FUNCTION tasks_completed
       RETURN INT
    IS
       result   INT := 0;
    BEGIN
-      /*
-      FOR curr_tsk IN (SELECT * FROM msc_tbl)
-      LOOP
-         IF (NOT status_is_pending (curr_tsk))
-         THEN
-            result := result + 1;
-         END IF;
-      END LOOP;
-      */
       SELECT COUNT (*)
         INTO result
         FROM msc_tbl
@@ -291,143 +439,10 @@ IS
          PRINT (SQLCODE || ' => ' || SQLERRM);
    END;
 
-   --USER
-   PROCEDURE insert_task (p_priority    msc_tbl.Priority%TYPE,
-                          p_desc        msc_tbl.Description%TYPE,
-                          p_time        msc_tbl.Approx_Time%TYPE)
-   IS
-      v_rank   msc_tbl.RANK%TYPE;
-   BEGIN
-      --The table takes in 6 arguments
-      idx := idx + 1;
-
-      IF (p_priority = 'High')
-      THEN
-         v_rank := 'A';
-      ELSIF (p_priority = 'Medium')
-      THEN
-         v_rank := 'B';
-      ELSIF (p_priority = 'Low')
-      THEN
-         v_rank := 'C';
-      ELSE
-         v_rank := 'D';
-      END IF;
-
-      INSERT INTO msc_tbl (Task,
-                           Task_ID,
-                           Priority,
-                           Description,
-                           Approx_Time,
-                           RANK)
-           VALUES (idx,
-                   unique_id_generator,
-                   p_priority,
-                   p_desc,
-                   p_time,
-                   v_rank);
-
-      COMMIT;
-   EXCEPTION
-      WHEN OTHERS
-      THEN
-         PRINT (SQLCODE || ' => ' || SQLERRM);
-   END;
-
-   PROCEDURE clear_todo_list
-   IS
-   BEGIN
-      --Resets the idx value
-      idx := 0;
-
-      DELETE FROM msc_tbl;
-
-      COMMIT;
-      --Makes sure to adjust the indexes if the table has been completely wiped clean
-      reset_table_state;
-   EXCEPTION
-      WHEN OTHERS
-      THEN
-         PRINT (SQLCODE || ' => ' || SQLERRM);
-   END;
-
-   PROCEDURE clear_todo_list2
-   IS
-   BEGIN
-      DELETE FROM msc_tbl_ordered;
-
-      COMMIT;
-   EXCEPTION
-      WHEN OTHERS
-      THEN
-         PRINT (SQLCODE || ' => ' || SQLERRM);
-   END;
-
    PROCEDURE PRINT (text VARCHAR2)
    IS
    BEGIN
       DBMS_OUTPUT.put_line (text);
-   EXCEPTION
-      WHEN OTHERS
-      THEN
-         PRINT (SQLCODE || ' => ' || SQLERRM);
-   END;
-
-   --USER
-   PROCEDURE delete_task (p_target NUMBER)
-   IS
-      v_param   NUMBER;
-   BEGIN
-      --Examine each cell one by one and compare it to a target value
-      FOR curr_tsk IN (SELECT * FROM msc_tbl)
-      LOOP
-         --When found, delete that record
-         IF (curr_tsk.Task = p_target)
-         THEN
-            --Grabs the Task number of the record that comes after the one you have deleted
-            v_param := curr_tsk.Task + 1;
-
-            DELETE FROM msc_tbl
-                  WHERE Task = curr_tsk.Task;
-
-            COMMIT;
-
-            --Iterate through the remaining records in order to adjust the task numbers
-            FOR i IN v_param .. find_last_task_num
-            LOOP
-               adjust_task_numbers (i);
-            END LOOP;
-         END IF;
-      END LOOP;
-
-      --Makes sure to adjust the indexes if the table has been completely wiped clean
-      reset_table_state;
-   EXCEPTION
-      WHEN OTHERS
-      THEN
-         PRINT (SQLCODE || ' => ' || SQLERRM);
-   END;
-
-   --USER
-   PROCEDURE delete_task2 (p_target NUMBER)
-   IS
-      v_param   NUMBER;
-   BEGIN
-      --Examine each cell one by one and compare it to a target value
-      FOR curr_tsk IN (SELECT * FROM msc_tbl)
-      LOOP
-         --When found, delete that record
-         IF (curr_tsk.Task = p_target)
-         THEN
-            DELETE FROM msc_tbl_ordered
-                  WHERE Task = curr_tsk.Task;
-
-            COMMIT;
-         END IF;
-      END LOOP;
-
-      --Makes sure to adjust the indexes if the table has been completely wiped clean
-      reset_table_state;
    EXCEPTION
       WHEN OTHERS
       THEN
@@ -467,108 +482,6 @@ IS
       END LOOP;
 
       RETURN max_idx;
-   EXCEPTION
-      WHEN OTHERS
-      THEN
-         PRINT (SQLCODE || ' => ' || SQLERRM);
-   END;
-
-   --USER
-   PROCEDURE completed_task (p_task_num NUMBER)
-   IS
-   BEGIN
-      UPDATE msc_tbl
-         SET Status = 'COMPLETE'
-       WHERE Task = p_task_num;
-   EXCEPTION
-      WHEN OTHERS
-      THEN
-         PRINT (SQLCODE || ' => ' || SQLERRM);
-   END;
-
-   PROCEDURE set_all_to_pending
-   IS
-   BEGIN
-      FOR curr_rec IN (SELECT * FROM msc_tbl)
-      LOOP
-         UPDATE msc_tbl
-            SET Status = 'PENDING'
-          WHERE Task = curr_rec.Task;
-      END LOOP;
-   EXCEPTION
-      WHEN OTHERS
-      THEN
-         PRINT (SQLCODE || ' => ' || SQLERRM);
-   END;
-
-   PROCEDURE set_all_to_complete
-   IS
-   BEGIN
-      FOR curr_rec IN (SELECT * FROM msc_tbl)
-      LOOP
-         UPDATE msc_tbl
-            SET Status = 'COMPLETE'
-          WHERE Task = curr_rec.Task;
-      END LOOP;
-   EXCEPTION
-      WHEN OTHERS
-      THEN
-         PRINT (SQLCODE || ' => ' || SQLERRM);
-   END;
-
-   --USER
-   PROCEDURE search_for_task_send_to (p_task_num NUMBER, p_email VARCHAR2)
-   IS
-   BEGIN
-      IMSI_CUSTOM.IMSI_EMAIL (
-         'Administrator',
-         'Administrator@imsready.com',
-         'Mitchel Santillan Cruz',
-         p_email,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         'SUBJECT OF EMAIL',
-         'BODY OF EMAIL',
-         NULL,
-         'BFILE_DIR' || '/' || 'SPECIFIC_TASK.TXT',                --fILENAMEB
-         'IMSI_CUSTOM.MSC_SCH_PKG.generate_specific_task',        --PROC. NAME
-         0,                                                    --NUM OF PARAMS
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         'N');
    EXCEPTION
       WHEN OTHERS
       THEN
@@ -665,6 +578,12 @@ IS
          PRINT (SQLCODE || ' => ' || SQLERRM);
    END;
 
+   --**********************************************************************************************************************************--
+
+
+
+   --********************************************************TEST METHODS**************************************************************--
+
    PROCEDURE order_table_on_priority
    IS
    --r_record msc_tbl%rowtype;
@@ -691,18 +610,35 @@ IS
          PRINT (SQLCODE || ' => ' || SQLERRM);
    END;
 
+   PROCEDURE delete_task2 (p_target NUMBER)
+   IS
+      v_param   NUMBER;
+   BEGIN
+      --Examine each cell one by one and compare it to a target value
+      FOR curr_tsk IN (SELECT * FROM msc_tbl)
+      LOOP
+         --When found, delete that record
+         IF (curr_tsk.Task = p_target)
+         THEN
+            DELETE FROM msc_tbl_ordered
+                  WHERE Task = curr_tsk.Task;
+         --commit;
+         END IF;
+      END LOOP;
+
+      --Makes sure to adjust the indexes if the table has been completely wiped clean
+      reset_table_state;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
    PROCEDURE reset_tables
    IS
       v_time   DATE := SYSDATE;
       v_char   VARCHAR2 (15) := TO_CHAR (v_time, 'HH:MI');
    BEGIN
-      /*
-      if (v_char = '11:59') then
-          clear_todo_list;
-          clear_todo_list2;
-      end if;
-      */
-
       clear_todo_list;
       clear_todo_list2;
    EXCEPTION
@@ -710,5 +646,65 @@ IS
       THEN
          PRINT (SQLCODE || ' => ' || SQLERRM);
    END;
+
+   PROCEDURE clear_todo_list
+   IS
+   BEGIN
+      --Resets the idx value
+      idx := 0;
+
+      DELETE FROM msc_tbl;
+
+      --commit;
+      --Makes sure to adjust the indexes if the table has been completely wiped clean
+      reset_table_state;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   PROCEDURE clear_todo_list2
+   IS
+   BEGIN
+      DELETE FROM msc_tbl_ordered;
+   --commit;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   PROCEDURE set_all_to_pending
+   IS
+   BEGIN
+      FOR curr_rec IN (SELECT * FROM msc_tbl)
+      LOOP
+         UPDATE msc_tbl
+            SET Status = 'PENDING'
+          WHERE Task = curr_rec.Task;
+      END LOOP;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+
+   PROCEDURE set_all_to_complete
+   IS
+   BEGIN
+      FOR curr_rec IN (SELECT * FROM msc_tbl)
+      LOOP
+         UPDATE msc_tbl
+            SET Status = 'COMPLETE'
+          WHERE Task = curr_rec.Task;
+      END LOOP;
+   EXCEPTION
+      WHEN OTHERS
+      THEN
+         PRINT (SQLCODE || ' => ' || SQLERRM);
+   END;
+--**********************************************************************************************************************************--
+
 END;
 /
