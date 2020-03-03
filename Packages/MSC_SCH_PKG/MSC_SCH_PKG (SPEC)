@@ -1,5 +1,5 @@
-/* Formatted on 3/2/2020 3:36:54 PM (QP5 v5.256.13226.35510) */
-CREATE OR REPLACE PACKAGE MSC_SCH_PKG
+/* Formatted on 3/3/2020 7:33:24 AM (QP5 v5.256.13226.35510) */
+CREATE OR REPLACE PACKAGE IMSI_CUSTOM.MSC_SCH_PKG
 IS
    /*
         Sets the idx for the Task attribute (Primary Key)
@@ -9,7 +9,30 @@ IS
    /*
        Sends an email containing a text file
    */
-   PROCEDURE send_to;
+   PROCEDURE send_to (P_ERR_BUF OUT VARCHAR2, P_MSG_BUFF OUT VARCHAR2);
+
+   /*
+        Allows the user to input an assignment into their to-do list (msc_tbl table) by
+        inserting its priority,a brief description and the time they think it would take to finish said task
+   */
+   PROCEDURE insert_task (p_priority    msc_tbl.Priority%TYPE,
+                          p_desc        msc_tbl.Description%TYPE,
+                          p_time        msc_tbl.Approx_Time%TYPE);
+
+   /*
+        Allows the user to delete a certain task from their list.
+  */
+   PROCEDURE delete_task (p_target NUMBER);
+
+   /*
+        Searches for a specific task and sends it to someone via email
+   */
+   PROCEDURE search_for_task_send_to (p_task_num NUMBER, p_email VARCHAR2);
+
+   /*
+        Allows a user to set the status of a task from PENDING to COMPLETE
+   */
+   PROCEDURE completed_task (p_task_num NUMBER);
 
    /*
        Generates a UTL_FILE that contains details about the current days to-do list
@@ -41,32 +64,9 @@ IS
       RETURN VARCHAR2;
 
    /*
-        Allows the user to input an assignment into their to-do list (msc_tbl table) by
-        inserting its priority,a brief description and the time they think it would take to finish said task
-   */
-   PROCEDURE insert_task (p_priority    msc_tbl.Priority%TYPE,
-                          p_desc        msc_tbl.Description%TYPE,
-                          p_time        msc_tbl.Approx_Time%TYPE);
-
-   /*
-        Clears the msc_tbl table
-   */
-   PROCEDURE clear_todo_list;
-
-   /*
-        Clears the msc_tbl_ordered table
-   */
-   PROCEDURE clear_todo_list2;
-
-   /*
         Replaces the long dbms_output stmt
    */
    PROCEDURE PRINT (text VARCHAR2);
-
-   /*
-        Allows the user to delete a certain task from their list.
-  */
-   PROCEDURE delete_task (p_target NUMBER);
 
    /*
          Adjusts the Task numbers after deleting a task from the list.
@@ -78,26 +78,6 @@ IS
   */
    FUNCTION find_last_task_num
       RETURN NUMBER;
-
-   /*
-        Allows a user to set the status of a task from PENDING to COMPLETE
-   */
-   PROCEDURE completed_task (p_task_num NUMBER);
-
-   /*
-        Sets all of the tasks status to PENDING
-   */
-   PROCEDURE set_all_to_pending;
-
-   /*
-        Sets all of the tasks status to COMPLETE
-   */
-   PROCEDURE set_all_to_complete;
-
-   /*
-        Searches for a specific task and sends it to someone via email
-   */
-   PROCEDURE search_for_task_send_to (p_task_num NUMBER, p_email VARCHAR2);
 
    /*
         Generates a txt file which contains detailed information about a specific task
@@ -129,5 +109,25 @@ IS
         This procedure clears the data from the tables msc_tbl and msc_tbl_ordered at 11:59 pm
    */
    PROCEDURE reset_tables;
+
+   /*
+        Clears the msc_tbl table
+   */
+   PROCEDURE clear_todo_list;
+
+   /*
+        Clears the msc_tbl_ordered table
+   */
+   PROCEDURE clear_todo_list2;
+
+   /*
+        Sets all of the tasks status to PENDING
+   */
+   PROCEDURE set_all_to_pending;
+
+   /*
+        Sets all of the tasks status to COMPLETE
+   */
+   PROCEDURE set_all_to_complete;
 END;
 /
